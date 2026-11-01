@@ -79,6 +79,20 @@
                         </div>
                     </div>
 
+                    <!-- Scope Filter Buttons (Girdi vs Cikti) -->
+                    <div class="flex flex-wrap items-center gap-2 mb-4 p-2 bg-slate-100/80 rounded-xl border border-slate-200">
+                        <span class="text-xs font-bold text-slate-600 uppercase tracking-wider ml-2 mr-1">Faaliyet Kapsamı:</span>
+                        <button type="button" onclick="setScopeFilter('all')" id="scope-all" class="px-3.5 py-1.5 rounded-lg text-xs font-bold bg-blue-600 text-white shadow-sm transition-all flex items-center gap-1.5">
+                            <span>📊</span> Tümü (Girdi + Çıktı)
+                        </button>
+                        <button type="button" onclick="setScopeFilter('cikti')" id="scope-cikti" class="px-3.5 py-1.5 rounded-lg text-xs font-bold bg-white text-slate-700 hover:bg-emerald-50 hover:text-emerald-700 border border-slate-200 transition-all flex items-center gap-1.5">
+                            <span>🌱</span> Tarımsal & Hayvansal Çıktılar (Mahsul / Fiyat)
+                        </button>
+                        <button type="button" onclick="setScopeFilter('girdi')" id="scope-girdi" class="px-3.5 py-1.5 rounded-lg text-xs font-bold bg-white text-slate-700 hover:bg-blue-50 hover:text-blue-700 border border-slate-200 transition-all flex items-center gap-1.5">
+                            <span>🚜</span> Tarımsal Girdiler (TGFE / Maliyet)
+                        </button>
+                    </div>
+
                     <!-- Structured Form -->
                     <div id="form-structured" class="grid grid-cols-1 md:grid-cols-12 gap-4 items-end">
                         <div class="md:col-span-2">
@@ -151,9 +165,11 @@
                 <!-- Results Table -->
                 <div class="glass-panel rounded-xl overflow-hidden shadow-sm border border-slate-200">
                     <div class="p-4 border-b border-slate-100 flex flex-wrap justify-between items-center bg-white gap-3">
-                        <div class="flex items-center gap-2">
+                        <div class="flex items-center gap-2 flex-wrap">
                             <h3 class="font-bold text-slate-700">Sorgu Sonuçları</h3>
-                            <span class="px-2 py-0.5 bg-blue-100 text-blue-700 text-xs rounded-full font-medium" id="result-count">0 kayıt</span>
+                            <span class="px-2.5 py-0.5 bg-slate-100 text-slate-700 text-xs rounded-full font-bold" id="result-count">0 kayıt</span>
+                            <span class="px-2 py-0.5 bg-emerald-100 text-emerald-800 text-xs rounded-full font-medium flex items-center gap-1" id="badge-cikti-count">🌱 <span id="cikti-count">0</span> Çıktı</span>
+                            <span class="px-2 py-0.5 bg-blue-100 text-blue-800 text-xs rounded-full font-medium flex items-center gap-1" id="badge-girdi-count">🚜 <span id="girdi-count">0</span> Girdi</span>
                         </div>
                         <div class="flex gap-2">
                             <button onclick="exportToExcel()" aria-label="Excel dosyasını indir" class="text-xs bg-white border border-slate-200 hover:bg-slate-50 px-3 py-1.5 rounded text-slate-600 transition-colors flex items-center gap-1">

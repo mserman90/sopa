@@ -281,6 +281,53 @@ const mockDatabase = generateComprehensiveData();
 // --- STATE MANAGEMENT ---
 let reportItems = [];
 let currentMode = 'structured';
+let currentScope = 'all'; // 'all', 'cikti', 'girdi'
+
+function setScopeFilter(scope) {
+    currentScope = scope;
+    const btnAll = document.getElementById('scope-all');
+    const btnCikti = document.getElementById('scope-cikti');
+    const btnGirdi = document.getElementById('scope-girdi');
+
+    // Buton stilleri
+    const activeClass = "px-3.5 py-1.5 rounded-lg text-xs font-bold text-white shadow-sm transition-all flex items-center gap-1.5";
+    const inactiveClass = "px-3.5 py-1.5 rounded-lg text-xs font-bold bg-white text-slate-700 hover:bg-slate-50 border border-slate-200 transition-all flex items-center gap-1.5";
+
+    if (btnAll && btnCikti && btnGirdi) {
+        btnAll.className = scope === 'all' ? `${activeClass} bg-blue-600` : inactiveClass;
+        btnCikti.className = scope === 'cikti' ? `${activeClass} bg-emerald-600` : inactiveClass;
+        btnGirdi.className = scope === 'girdi' ? `${activeClass} bg-blue-600` : inactiveClass;
+    }
+
+    // Ana grup seçeneklerini kapsama göre dinamik filtrele
+    const mainGroupSel = document.getElementById('sel-main-group');
+    if (mainGroupSel) {
+        const optGroups = mainGroupSel.querySelectorAll('optgroup');
+        if (optGroups.length >= 2) {
+            const ciktiGroup = optGroups[0];
+            const girdiGroup = optGroups[1];
+            if (scope === 'all') {
+                ciktiGroup.style.display = '';
+                girdiGroup.style.display = '';
+            } else if (scope === 'cikti') {
+                ciktiGroup.style.display = '';
+                girdiGroup.style.display = 'none';
+                if (mainGroupSel.value.startsWith('gubre') || mainGroupSel.value.startsWith('yem') || mainGroupSel.value.startsWith('tohum') || mainGroupSel.value.startsWith('enerji') || mainGroupSel.value.startsWith('ilac') || mainGroupSel.value.startsWith('makine') || mainGroupSel.value.startsWith('hizmet')) {
+                    mainGroupSel.value = '';
+                }
+            } else if (scope === 'girdi') {
+                ciktiGroup.style.display = 'none';
+                girdiGroup.style.display = '';
+                if (mainGroupSel.value.startsWith('cikti_')) {
+                    mainGroupSel.value = '';
+                }
+            }
+        }
+    }
+
+    // Otomatik sorgula
+    performSearch();
+}
 
 // --- UI INITIALIZATION ---
 const citySelect = document.getElementById('sel-city');
@@ -392,6 +439,11 @@ const performSearch = debounce(() => {
     setTimeout(() => {
         let results = mockDatabase;
         
+        // 0. Faaliyet Kapsamı Filtresi (Girdi / Çıktı / Tümü)
+        if (currentScope !== 'all') {
+            results = results.filter(item => item.type === currentScope);
+        }
+
         // 1. İl Filtresi
         if (city) {
             results = results.filter(item => item.city === city);
@@ -469,8 +521,16 @@ const performAISearch = debounce(() => {
 function renderResults(data) {
     const tbody = document.getElementById('results-body');
     const countBadge = document.getElementById('result-count');
+    const ciktiCountEl = document.getElementById('cikti-count');
+    const girdiCountEl = document.getElementById('girdi-count');
+
     tbody.innerHTML = '';
     countBadge.innerText = `${data.length} kayıt`;
+
+    const ciktiCount = data.filter(d => d.type === 'cikti').length;
+    const girdiCount = data.filter(d => d.type === 'girdi').length;
+    if (ciktiCountEl) ciktiCountEl.innerText = ciktiCount;
+    if (girdiCountEl) girdiCountEl.innerText = girdiCount;
 
     if (data.length === 0) {
         tbody.innerHTML = `<tr><td colspan="7" class="px-6 py-8 text-center text-slate-400 font-medium">Seçtiğiniz kriterlere uygun veri bulunamadı. Lütfen filtreleri kontrol ediniz.</td></tr>`;
