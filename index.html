@@ -16,7 +16,7 @@
             <div class="w-10 h-10 bg-blue-600 rounded-xl flex items-center justify-center font-bold text-xl shadow-lg shadow-blue-900/50">T</div>
             <div>
                 <h1 class="font-bold text-lg tracking-wide">TÜİK Expert</h1>
-                <p class="text-xs text-slate-400">İl Bazlı Analiz Modülü</p>
+                <p class="text-xs text-slate-400">İl Bazlı Girdi & Ürün Çıktı Modülü</p>
             </div>
         </div>
         
@@ -49,7 +49,7 @@
         <header class="bg-white/80 backdrop-blur-md border-b border-slate-200 h-16 flex items-center justify-between px-8 shadow-sm z-10 no-print sticky top-0">
             <h2 class="text-xl font-bold text-slate-800 flex items-center gap-3" id="page-title">
                 <span class="w-1.5 h-6 bg-blue-600 rounded-full"></span>
-                İl Bazlı Tarımsal Girdi Analizi
+                İl Bazlı Tarımsal Girdi ve Faaliyet Çıktısı Analizi
             </h2>
             <div class="flex items-center gap-4">
                 <div class="text-right hidden sm:block">
@@ -70,8 +70,8 @@
                 <div class="glass-panel rounded-2xl p-6 border-l-4 border-l-blue-600">
                     <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">
                         <div>
-                            <h3 class="text-lg font-bold text-slate-800">İl ve Girdi Kalemi Seçimi</h3>
-                            <p class="text-sm text-slate-500">81 il için tarımsal girdi fiyatlarını aylık bazda sorgulayınız.</p>
+                            <h3 class="text-lg font-bold text-slate-800">İl, Girdi ve Ürün Çıktısı Seçimi</h3>
+                            <p class="text-sm text-slate-500">81 il için tarımsal girdi maliyetleri ve tarım-hayvancılık faaliyet çıktısı ürün fiyatlarını sorgulayınız.</p>
                         </div>
                         <div class="flex bg-slate-100 rounded-lg p-1 border border-slate-200">
                             <button onclick="setSearchMode('structured')" id="mode-structured" class="px-4 py-1.5 rounded-md text-sm font-medium bg-white shadow-sm text-blue-600 transition-all">Kategori Ağacı</button>
@@ -91,14 +91,24 @@
                         <div class="md:col-span-3">
                             <label class="block text-xs font-bold text-slate-500 mb-1.5 uppercase tracking-wider">Ana Grup</label>
                             <select id="sel-main-group" class="w-full border border-slate-300 rounded-lg px-3 py-2.5 text-sm focus:ring-2 focus:ring-blue-500 outline-none bg-white">
-                                <option value="">TÜM GRUPLAR</option>
-                                <option value="gubre">Gübre ve Toprak İyileştiriciler</option>
-                                <option value="yem">Hayvan Yemi</option>
-                                <option value="tohum">Tohum ve Fide</option>
-                                <option value="enerji">Enerji ve Yakıtlar</option>
-                                <option value="ilac">Tarım İlaçları</option>
-                                <option value="makine">Tarım Makine ve Teçhizatı</option>
-                                <option value="hizmet">Hizmetler (Kira, İşçilik vb.)</option>
+                                <option value="">TÜM GRUPLAR (Girdi + Çıktı)</option>
+                                <optgroup label="🌱 Tarım ve Hayvancılık Faaliyet Çıktıları (Mahsul)">
+                                    <option value="cikti_tahil">🌾 Tahıllar ve Baklagiller</option>
+                                    <option value="cikti_endustri">🌻 Endüstri Bitkileri ve Yağlı Tohumlar</option>
+                                    <option value="cikti_sebze">🍅 Sebzeler ve Sera Ürünleri</option>
+                                    <option value="cikti_meyve">🍏 Meyveler ve Sert Kabuklular</option>
+                                    <option value="cikti_hayvancilik">🥩 Canlı Hayvan ve Karkas Et</option>
+                                    <option value="cikti_sut_kumes">🥛 Süt, Yumurta ve Arıcılık</option>
+                                </optgroup>
+                                <optgroup label="🚜 Tarımsal Girdi ve Maliyet Kalemleri (TGFE)">
+                                    <option value="gubre">Gübre ve Toprak İyileştiriciler</option>
+                                    <option value="yem">Hayvan Yemi</option>
+                                    <option value="tohum">Tohum ve Fide</option>
+                                    <option value="enerji">Enerji ve Yakıtlar</option>
+                                    <option value="ilac">Tarım İlaçları</option>
+                                    <option value="makine">Tarım Makine ve Teçhizatı</option>
+                                    <option value="hizmet">Hizmetler (Kira, İşçilik vb.)</option>
+                                </optgroup>
                             </select>
                         </div>
                         <div class="md:col-span-2">
@@ -131,7 +141,7 @@
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
                             </svg>
                         </div>
-                        <textarea id="ai-prompt" class="w-full border border-slate-300 rounded-lg pl-10 pr-4 py-3 text-sm focus:ring-2 focus:ring-indigo-500 outline-none resize-none h-20 shadow-inner bg-slate-50" placeholder="Örn: 'Konya ili için Ekim 2026 motorin ve gübre fiyatlarını getir.'"></textarea>
+                        <textarea id="ai-prompt" class="w-full border border-slate-300 rounded-lg pl-10 pr-4 py-3 text-sm focus:ring-2 focus:ring-indigo-500 outline-none resize-none h-20 shadow-inner bg-slate-50" placeholder="Örn: 'Konya buğday, mısır ve motorin' veya 'Giresun fındık ve gübre fiyatları'"></textarea>
                         <button onclick="performAISearch()" class="absolute bottom-3 right-3 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold px-4 py-2 rounded-md transition-colors flex items-center gap-2 shadow-md" aria-label="AI ile analiz et">
                             AI ile Analiz Et
                         </button>
@@ -157,7 +167,8 @@
                             <thead class="text-xs text-slate-700 uppercase bg-slate-50 border-b border-slate-200">
                                 <tr>
                                     <th scope="col" class="px-6 py-3 font-bold">İl</th>
-                                    <th scope="col" class="px-6 py-3 font-bold">Girdi Kalemi</th>
+                                    <th scope="col" class="px-6 py-3 font-bold">Tür</th>
+                                    <th scope="col" class="px-6 py-3 font-bold">Ürün / Girdi Kalemi</th>
                                     <th scope="col" class="px-6 py-3 font-bold">Dönem</th>
                                     <th scope="col" class="px-6 py-3 font-bold text-right">Endeks (2021=100)</th>
                                     <th scope="col" class="px-6 py-3 font-bold text-right">Tahmini Birim Fiyat</th>
@@ -170,7 +181,7 @@
                         </table>
                     </div>
                     <div class="p-4 bg-slate-50 text-xs text-slate-500 text-center border-t border-slate-100">
-                        *İl bazlı veriler, TÜİK ulusal endekslerinin bölgesel maliyet farklılıkları (nakliye, işçilik vb.) dikkate alınarak uyarlanmış tahmini değerleridir.
+                        *İl bazlı veriler, TÜİK Tarım-ÜFE, Çiftçi Eline Geçen Fiyatlar (ÇEGF) ve TGFE verilerinin bölgesel verim, nakliye ve pazar dinamikleri dikkate alınarak uyarlanmış değerleridir.
                     </div>
                 </div>
             </div>
