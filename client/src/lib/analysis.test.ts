@@ -91,6 +91,21 @@ Konya,2025,bitkisel,Ekmeklik Buğday,1000,Ton,TÜİK BÜİ,İl,11.50,TL/Kg,80000
       expect(record.hesaplanan_brut_marj_tl).toBe(3500000);
       expect(record.marj_hesaplanabilir).toBe(true);
     });
+
+    it('TÜİK MEDAS (kn=92) doğrudan başlık formatını (il_adi, urun_adi, uretim_(ton)) başarıyla tanımalıdır', () => {
+      const medasCsv = `il_adi,yil,urun_adi,uretim_(ton)
+Konya,2025,Sert Buğday (Durum),150000
+Ankara,2025,Arpa,85000`;
+      const result = parseAndValidateCSV(medasCsv);
+      expect(result.valid).toBe(true);
+      expect(result.records.length).toBe(2);
+      expect(result.records[0].il).toBe('Konya');
+      expect(result.records[0].urun).toBe('Sert Buğday (Durum)');
+      expect(result.records[0].uretim_miktari).toBe(150000);
+      expect(result.records[0].sektor).toBe('bitkisel');
+      expect(result.records[0].uretim_birimi).toBe('Ton');
+      expect(result.records[0].kaynak).toContain('TÜİK MEDAS');
+    });
   });
 
   describe('4. KPI ve Metrik Toplulaştırma', () => {

@@ -46,25 +46,25 @@ export const sourceCatalog: SourceMetadata[] = [
   },
   {
     id: 'tuik-bitkisel',
-    name: 'Bitkisel Üretim İstatistikleri (BÜİ)',
+    name: 'Bitkisel Üretim İstatistikleri (BÜİ — MEDAS kn=92)',
     institution: 'Türkiye İstatistik Kurumu (TÜİK)',
-    description: 'Tarla ürünleri, sebze ve meyvelere ilişkin ekilen/hasat edilen alan ve üretim miktarı göstergeleri.',
-    frequency: 'Yıllık (Geçici/Kesinleşmiş)',
+    description: 'Tarla ürünleri, sebze ve meyvelere ilişkin ekilen/hasat edilen alan, verim ve üretim miktarı göstergeleri (MEDAS Tablo Kodu: kn=92).',
+    frequency: 'Yıllık (Geçici / Kesinleşmiş)',
     coverage: 'İl / İBBS Düzey 3 (İlçeler toplulaştırılmış)',
-    officialUrl: 'https://data.tuik.gov.tr/Kategori/GetKategori?p=Tarim-111',
+    officialUrl: 'https://biruni.tuik.gov.tr/medas/?kn=92&locale=tr',
     sdmxAvailable: true,
-    notes: 'TÜİK portalından indirilen CSV formatında il ve ürün eşleştirmesi gerektirir.'
+    notes: 'TÜİK MEDAS kn=92 doğrudan sorgulama tablosudur. İndirilen CSV/Excel dosyaları il ve ürün bazında otomatik eşleştirilebilir.'
   },
   {
     id: 'tuik-hayvansal',
-    name: 'Hayvansal Üretim İstatistikleri (HÜİ)',
+    name: 'Hayvansal Üretim İstatistikleri (HÜİ — MEDAS kn=101)',
     institution: 'Türkiye İstatistik Kurumu (TÜİK)',
-    description: 'Büyükbaş, küçükbaş ve kümes hayvanı sayıları ile sağılan hayvan ve süt/yün/bal üretim miktarları.',
+    description: 'Büyükbaş, küçükbaş ve kümes hayvanı sayıları ile sağılan hayvan ve süt/yün/bal üretim miktarları (MEDAS Tablo Kodu: kn=101).',
     frequency: '6 Aylık / Yıllık',
     coverage: 'İl / İBBS Düzey 3',
-    officialUrl: 'https://data.tuik.gov.tr/Kategori/GetKategori?p=Tarim-111',
+    officialUrl: 'https://biruni.tuik.gov.tr/medas/?kn=101&locale=tr',
     sdmxAvailable: true,
-    notes: 'Hayvan stoku (mevcut varlık) satılan/kesilen adet ile karıştırılmamalıdır.'
+    notes: 'TÜİK MEDAS kn=101 doğrudan hayvansal üretim tablosudur. Hayvan stoku satılan/kesilen adet ile karıştırılmamalıdır.'
   },
   {
     id: 'tuik-cegf',

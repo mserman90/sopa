@@ -175,24 +175,43 @@ export function parseAndValidateCSV(csvText: string): ValidationResult {
     return { valid: false, errors, warnings, records: [] };
   }
 
+  // TÜİK MEDAS (kn=92) ve standart şema başlık eşleştirmesi
+  const findVal = (row: Record<string, string>, candidates: string[]): string => {
+    for (const cand of candidates) {
+      if (row[cand] !== undefined && row[cand] !== null && row[cand] !== '') {
+        return row[cand];
+      }
+    }
+    return '';
+  };
+
   const headers = Object.keys(parsed.data[0]);
-  const missingHeaders = requiredFields.filter(f => !headers.includes(f));
-  if (missingHeaders.length > 0) {
-    errors.push(`Zorunlu sütunlar eksik: ${missingHeaders.join(', ')}. Şablonu indirip kontrol ediniz.`);
+  const hasIl = headers.some(h => ['il', 'il_adi', 'i̇l', 'i̇l_adi', 'yerlesim_yeri', 'sehir'].includes(h));
+  const hasYil = headers.some(h => ['yil', 'yıl', 'donem', 'dönem', 'zaman'].includes(h));
+  const hasUrun = headers.some(h => ['urun', 'ürün', 'urun_adi', 'ürün_adı', 'madde', 'madde_adi'].includes(h));
+  const hasMiktar = headers.some(h => ['uretim_miktari', 'üretim_miktarı', 'uretim_(ton)', 'üretim_(ton)', 'uretim', 'üretim', 'miktar', 'deger'].includes(h));
+
+  if (!hasIl || !hasYil || !hasUrun || !hasMiktar) {
+    const missing: string[] = [];
+    if (!hasIl) missing.push('il / il_adi');
+    if (!hasYil) missing.push('yil / dönem');
+    if (!hasUrun) missing.push('urun / urun_adi');
+    if (!hasMiktar) missing.push('uretim_miktari / uretim_(ton)');
+    errors.push(`Zorunlu sütunlar eksik: ${missing.join(', ')}. Şablonu veya TÜİK MEDAS (kn=92) CSV çıktısını kontrol ediniz.`);
     return { valid: false, errors, warnings, records: [] };
   }
 
   parsed.data.forEach((row, index) => {
     const lineNum = index + 2;
 
-    const il = (row['il'] || '').trim();
-    const yilStr = (row['yil'] || '').trim();
-    const sektorRaw = (row['sektor'] || '').trim().toLowerCase();
-    const urun = (row['urun'] || '').trim();
-    const miktarStr = (row['uretim_miktari'] || '').trim().replace(',', '.');
-    const uretimBirimi = (row['uretim_birimi'] || '').trim();
-    const kaynak = (row['kaynak'] || '').trim();
-    const cografiDuzeyRaw = (row['cografi_duzey'] || '').trim();
+    const il = findVal(row, ['il', 'il_adi', 'i̇l', 'i̇l_adi', 'yerlesim_yeri', 'sehir']).trim();
+    const yilStr = findVal(row, ['yil', 'yıl', 'donem', 'dönem', 'zaman']).trim();
+    const sektorRaw = (findVal(row, ['sektor', 'sektör']) || 'bitkisel').trim().toLowerCase();
+    const urun = findVal(row, ['urun', 'ürün', 'urun_adi', 'ürün_adı', 'madde', 'madde_adi']).trim();
+    const miktarStr = findVal(row, ['uretim_miktari', 'üretim_miktarı', 'uretim_(ton)', 'üretim_(ton)', 'uretim', 'üretim', 'miktar', 'deger']).trim().replace(',', '.');
+    const uretimBirimi = (findVal(row, ['uretim_birimi', 'üretim_birimi', 'birim', 'olcu_birimi']) || 'Ton').trim();
+    const kaynak = (findVal(row, ['kaynak', 'veri_kaynagi', 'veri_kaynağı']) || 'TÜİK MEDAS (kn=92 BÜİ)').trim();
+    const cografiDuzeyRaw = (findVal(row, ['cografi_duzey', 'coğrafi_düzey', 'duzey']) || 'İl').trim();
 
     if (!il || !yilStr || !sektorRaw || !urun || !miktarStr || !uretimBirimi || !kaynak || !cografiDuzeyRaw) {
       warnings.push(`Satır ${lineNum}: Zorunlu alanlardan biri boş olduğu için bu satır atlandı.`);
