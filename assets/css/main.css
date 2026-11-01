@@ -1,0 +1,28 @@
+/* Custom styles extracted from index.html */
+body {font-family: 'Inter', sans-serif; background-color: #f8fafc;}
+.glass-panel {
+    background: rgba(255, 255, 255, 0.98);
+    backdrop-filter: blur(12px);
+    border: 1px solid rgba(255, 255, 255, 0.5);
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+}
+.fade-in {animation: fadeIn 0.4s cubic-bezier(0.4,0,0.2,1) forwards;}
+@keyframes fadeIn {from {opacity:0; transform:translateY(12px);} to {opacity:1; transform:translateY(0);}}
+/* Custom Scrollbar */
+::-webkit-scrollbar {width:8px; height:8px;}
+::-webkit-scrollbar-track {background:#f1f5f9;}
+::-webkit-scrollbar-thumb {background:#cbd5e1; border-radius:4px;}
+::-webkit-scrollbar-thumb:hover {background:#94a3b8;}
+.loader {
+    border:3px solid #e2e8f0; border-radius:50%; border-top:3px solid #2563eb;
+    width:24px; height:24px; animation:spin 0.8s linear infinite;
+}
+@keyframes spin {0% {transform:rotate(0deg);} 100% {transform:rotate(360deg);}}
+/* Print Styles */
+@media print {
+    aside, header, .no-print, button {display:none !important;}
+    main {margin:0; padding:0; overflow:visible; background:white;}
+    .print-container {box-shadow:none; border:none; padding:0; min-height:auto; width:100%; max-width:100%;}
+    body {background:white; color:black;}
+    .bg-slate-50 {background-color:white !important; border:1px solid #ddd;}
+}
