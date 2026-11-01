@@ -45,15 +45,26 @@ export const sourceCatalog: SourceMetadata[] = [
     notes: 'Girdi tarafında gübre (20.15), motorin (19.20), yem (10.91); Çıktı tarafında buğday (01.11), süt (01.41) vb. kodlanır.'
   },
   {
-    id: 'tuik-bitkisel',
+    id: 'tuik-bitkisel-104',
+    name: 'Bitkisel Üretim İstatistikleri (BÜİ — MEDAS kn=104)',
+    institution: 'Türkiye İstatistik Kurumu (TÜİK)',
+    description: 'Tarla ürünleri, sebze, meyve, içecek ve baharat bitkilerine ait ekilen/hasat edilen alan, üretim miktarı ve ağaç sayıları detaylı sorgulama modülü.',
+    frequency: 'Yıllık (Geçici / Kesinleşmiş)',
+    coverage: 'İl / İBBS Düzey 3 (81 İl Düzeyi)',
+    officialUrl: 'https://biruni.tuik.gov.tr/medas/?kn=104&locale=tr',
+    sdmxAvailable: true,
+    notes: 'TÜİK MEDAS kn=104 doğrudan detaylı sorgulama tablosudur. İndirilen CSV/Excel çıktısı TarımViz tarafından otomatik ayrıştırılır.'
+  },
+  {
+    id: 'tuik-bitkisel-92',
     name: 'Bitkisel Üretim İstatistikleri (BÜİ — MEDAS kn=92)',
     institution: 'Türkiye İstatistik Kurumu (TÜİK)',
-    description: 'Tarla ürünleri, sebze ve meyvelere ilişkin ekilen/hasat edilen alan, verim ve üretim miktarı göstergeleri (MEDAS Tablo Kodu: kn=92).',
+    description: 'Tarla ürünleri, sebze ve meyvelere ilişkin genel ekilen alan, verim ve üretim miktarı zaman serisi tablosu (MEDAS kn=92).',
     frequency: 'Yıllık (Geçici / Kesinleşmiş)',
     coverage: 'İl / İBBS Düzey 3 (İlçeler toplulaştırılmış)',
     officialUrl: 'https://biruni.tuik.gov.tr/medas/?kn=92&locale=tr',
     sdmxAvailable: true,
-    notes: 'TÜİK MEDAS kn=92 doğrudan sorgulama tablosudur. İndirilen CSV/Excel dosyaları il ve ürün bazında otomatik eşleştirilebilir.'
+    notes: 'TÜİK MEDAS kn=92 doğrudan tarihsel ve genel sorgulama tablosudur.'
   },
   {
     id: 'tuik-hayvansal',

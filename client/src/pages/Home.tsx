@@ -415,11 +415,21 @@ export const Home: React.FC = () => {
 
             <div className="flex items-center gap-2 flex-wrap">
               <a
+                href="https://biruni.tuik.gov.tr/medas/?kn=104&locale=tr"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="px-3 py-1.5 text-xs font-semibold text-[#1C2418] bg-[#FBF9F4] hover:bg-[#F0EDE4] border border-[#D8D2C2] rounded-lg transition-colors flex items-center gap-1.5"
+                title="TÜİK MEDAS Bitkisel Üretim Detaylı Sorgulama (kn=104)"
+              >
+                <ExternalLink className="w-3.5 h-3.5 text-[#5B6B32]" /> TÜİK MEDAS (kn=104)
+              </a>
+
+              <a
                 href="https://biruni.tuik.gov.tr/medas/?kn=92&locale=tr"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="px-3 py-1.5 text-xs font-semibold text-[#1C2418] bg-[#FBF9F4] hover:bg-[#F0EDE4] border border-[#D8D2C2] rounded-lg transition-colors flex items-center gap-1.5"
-                title="TÜİK MEDAS Bitkisel Üretim Veritabanı (kn=92)"
+                title="TÜİK MEDAS Bitkisel Üretim Genel Veritabanı (kn=92)"
               >
                 <ExternalLink className="w-3.5 h-3.5 text-[#5B6B32]" /> TÜİK MEDAS (kn=92)
               </a>
