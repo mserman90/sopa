@@ -1,0 +1,9 @@
+{
+  "routes": [
+    {
+      "path": "/",
+      "page": "Home.tsx",
+      "title": "TarımViz - Anadolu Tarım ve Hayvancılık Veri Atlası"
+    }
+  ]
+}

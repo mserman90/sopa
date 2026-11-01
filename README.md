@@ -1,43 +1,62 @@
-# TÜİK İl Bazlı Girdi Analizi
+# TarımViz — Anadolu Tarım ve Hayvancılık Veri Atlası
 
-A single‑page web application that lets users query and export regional agricultural input price data (mocked for demo purposes). The UI is built with **Tailwind CSS** (via CDN) and vanilla JavaScript.
+**TarımViz**, bitkisel ve hayvansal üretim verilerini il, yıl ve ürün/hayvan türüne göre inceleyen; veri bulunabildiği ölçüde gelir, maliyet ve brüt marjı hesaplayan Türkçe analiz masasıdır.
 
-## Project structure
-```
-tuik_analysis/
-├─ index.html                # Main page – loads external CSS/JS
-├─ assets/
-│  ├─ css/
-│  │   └─ main.css          # Custom Tailwind overrides & utilities
-│  ├─ js/
-│  │   └─ app.js            # All UI logic, search, report, export, PDF
-│  └─ data/
-│      └─ mock.json         # (Future) mock database for lazy loading
-├─ CHROMEWEBSTORE.md         # Metadata for a future Chrome Extension
-└─ README.md                # This file
-```
-
-## How to run locally
-1. Open `index.html` in a modern browser (Chrome/Edge/Firefox). No server is required – everything runs client‑side.
-2. The app loads two external libraries via CDN:
-   - **SheetJS** (`xlsx.full.min.js`) for Excel export.
-   - **jsPDF** (`jspdf.umd.min.js`) for PDF generation.
-3. Interact with the UI:
-   - Choose a city, main group, sub‑category, and period, then click **İl Bazlı Sorgula**.
-   - Use the free‑text AI search box (mocked) for quick queries.
-   - Add rows to the report with **+ Rapora Ekle** and export the report via the **Yazdır / PDF** button.
-   - Export the current result table to Excel using the **Excel** button.
-
-## Accessibility notes
-- All interactive controls now have explicit `aria-label` attributes.
-- Toast notifications use `role="alert"` and `aria-live="assertive"` for screen‑reader announcements.
-- Buttons are keyboard‑focusable and provide clear visual focus via Tailwind defaults.
-
-## Future improvements (roadmap)
-- **Lazy‑load mock data**: move the generated dataset to `assets/data/mock.json` and load it with `fetch()` to reduce the initial script size.
-- **Tailwind JIT build**: replace the CDN import with a locally compiled CSS file to trim unused utilities.
-- **Full Chrome Extension packaging**: see `CHROMEWEBSTORE.md` for the required manifest and publishing checklist.
-- **Unit tests**: add a simple test harness (e.g., Jest) for the data‑filtering logic.
+- **Teknoloji Yığını:** React 19, TypeScript, Vite, Recharts, Papaparse, Tailwind CSS (v4).
+- **Tasarım Dili:** Anadolu Veri Atlası (Zeytin yeşili `#5B6B32`, Sıcak bakır `#C47A3A`, Keten zemin `#FBF9F4`).
 
 ---
-*Generated on 2026‑11‑01 by Antigravity (AGY).*
+
+## 📌 Temel İlkeler ve Metodolojik Kısıtlar
+
+1. **Ölçülmemiş Değer Gösterilmez:**
+   İlk açılışta veya veri eksikliğinde hayali örnek değerler üretilmez; boş durum (empty state) mesajıyla kullanıcı karşılanır.
+2. **Kullanıcı Beyanı ve Yerel İşleme:**
+   Yüklenen CSV dosyaları harici sunuculara veya ortak veritabanına aktarılmaz; tamamen kullanıcının tarayıcısında (`localStorage`) işlenir.
+3. **Coğrafi Düzey Sınırı:**
+   Yalnızca `İl` veya `İBBS Düzey 3` kabul edilir. İlçe verileri kabul edilmez (önceden ile toplulaştırılmış olmalıdır).
+4. **Gelir Hesabı:**
+   Yalnızca üretim miktarı ile uyumlu birim TL satış fiyatı (ÇEGF) varsa hesaplanır.
+5. **Brüt Marj Güvencesi:**
+   Maliyet eksikliği **asla 0 TL kabul edilmez**. Yalnızca kullanıcı tarafından açıkça `gerceklesen` (doğrudan ölçülmüş) olarak sınıflandırılan maliyetlerle brüt marj hesaplanır; tahmini maliyetler dışarıda bırakılır.
+6. **Ulusal Endeksler İl Fiyatı Değildir:**
+   TÜİK Tarım-ÜFE ve Tarım-GFE ulusal serileri il ölçümü yerine kullanılamaz.
+
+---
+
+## 📊 CSV İçe Aktarma Şeması
+
+| Sütun Adı | Zorunluluk | Tip | Açıklama |
+|---|---|---|---|
+| `il` | **Zorunlu** | Metin | 81 ilden biri |
+| `yil` | **Zorunlu** | Sayı | Örn: `2025` |
+| `sektor` | **Zorunlu** | `bitkisel` \| `hayvansal` | Üretim sektörü |
+| `urun` | **Zorunlu** | Metin | Ürün veya hayvan türü |
+| `uretim_miktari` | **Zorunlu** | Sayı | Üretim miktarı |
+| `uretim_birimi` | **Zorunlu** | Metin | `Ton`, `Kg`, `Litre`, `Adet`, `Baş` |
+| `kaynak` | **Zorunlu** | Metin | Örn: `TÜİK Bitkisel Üretim İstatistikleri` |
+| `cografi_duzey` | **Zorunlu** | `İl` \| `İBBS Düzey 3` | Coğrafi çözünürlük |
+| `fiyat` | İsteğe Bağlı | Sayı | Çiftçi birim satış fiyatı |
+| `fiyat_birimi` | İsteğe Bağlı | Metin | `TL/Kg`, `TL/Ton`, `TL/Lt` |
+| `toplam_maliyet_tl` | İsteğe Bağlı | Sayı | Toplam üretim maliyeti |
+| `maliyet_durumu` | İsteğe Bağlı | `gerceklesen` \| `tahmini` | Maliyet ölçüm niteliği |
+| `donem` | İsteğe Bağlı | Metin | Örn: `Yıllık`, `Ekim` |
+| `veri_durumu` | İsteğe Bağlı | `kesin` \| `gecici` \| `revize` | İstatistik durumu |
+
+---
+
+## 🚀 Kurulum ve Çalıştırma
+
+```bash
+# Bağımlılıkları yükleyin
+npm install
+
+# Testleri çalıştırın (Vitest)
+npm test
+
+# Geliştirme sunucusunu başlatın
+npm run dev
+
+# Üretim derlemesi (Build)
+npm run build
+```
