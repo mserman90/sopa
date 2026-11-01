@@ -325,6 +325,9 @@ function setScopeFilter(scope) {
         }
     }
 
+    // Alt grupları da yeni kapsama göre güncelle
+    populateSubtopics(mainGroupSel ? mainGroupSel.value : '');
+
     // Otomatik sorgula
     performSearch();
 }
@@ -340,6 +343,7 @@ if (citySelect) {
         citySelect.appendChild(opt);
     });
 }
+populateSubtopics();
 
 function switchTab(tab) {
     const btnDash = document.getElementById('btn-dashboard');
@@ -378,29 +382,73 @@ function setSearchMode(mode) {
     }
 }
 
-// Ana Grup değiştiğinde alt kategorileri dinamik yükleme
-const mainGroupSelect = document.getElementById('sel-main-group');
-if (mainGroupSelect) {
-    mainGroupSelect.addEventListener('change', e => {
-        const subSelect = document.getElementById('sel-subtopic');
-        const val = e.target.value;
-        subSelect.innerHTML = '<option value="">Tüm Alt Kategoriler</option>';
-        if (val && inputCategories[val]) {
-            subSelect.disabled = false;
-            inputCategories[val].forEach(sub => {
+// Alt grupları dinamik doldurucu fonksiyon
+function populateSubtopics(selectedGroup = '') {
+    const subSelect = document.getElementById('sel-subtopic');
+    if (!subSelect) return;
+    const previousVal = subSelect.value;
+    subSelect.innerHTML = '<option value="">Tüm Alt Gruplar</option>';
+
+    if (selectedGroup && inputCategories[selectedGroup]) {
+        // Belirli bir ana grup seçilmişse sadece onun alt gruplarını listele
+        inputCategories[selectedGroup].forEach(sub => {
+            const opt = document.createElement('option');
+            opt.value = sub;
+            opt.textContent = sub;
+            subSelect.appendChild(opt);
+        });
+    } else {
+        // Ana grup seçilmemişse, kapsama göre (Tümü, Çıktı, Girdi) tüm alt grupları optgroup ile listele
+        const ciktiSubs = new Set();
+        const girdiSubs = new Set();
+
+        productDefinitions.forEach(p => {
+            if (p.type === 'cikti') ciktiSubs.add(p.subtopic);
+            else if (p.type === 'girdi') girdiSubs.add(p.subtopic);
+        });
+
+        if (currentScope === 'all' || currentScope === 'cikti') {
+            const grp = document.createElement('optgroup');
+            grp.label = "🌱 Çıktı Alt Grupları";
+            Array.from(ciktiSubs).sort((a, b) => a.localeCompare(b, 'tr')).forEach(sub => {
                 const opt = document.createElement('option');
                 opt.value = sub;
                 opt.textContent = sub;
-                subSelect.appendChild(opt);
+                grp.appendChild(opt);
             });
-        } else {
-            subSelect.disabled = true;
-            const opt = document.createElement('option');
-            opt.textContent = 'Önce ana grup seçiniz';
-            subSelect.appendChild(opt);
+            subSelect.appendChild(grp);
         }
-    });
+
+        if (currentScope === 'all' || currentScope === 'girdi') {
+            const grp = document.createElement('optgroup');
+            grp.label = "🚜 Girdi Alt Grupları";
+            Array.from(girdiSubs).sort((a, b) => a.localeCompare(b, 'tr')).forEach(sub => {
+                const opt = document.createElement('option');
+                opt.value = sub;
+                opt.textContent = sub;
+                grp.appendChild(opt);
+            });
+            subSelect.appendChild(grp);
+        }
+    }
+
+    if (previousVal && Array.from(subSelect.options).some(o => o.value === previousVal)) {
+        subSelect.value = previousVal;
+    }
 }
+
+// Filtre alanlarına anlık değişim dinleyicileri (canlı filtreleme)
+['sel-city', 'sel-main-group', 'sel-subtopic', 'sel-period'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) {
+        el.addEventListener('change', () => {
+            if (id === 'sel-main-group') {
+                populateSubtopics(el.value);
+            }
+            performSearch();
+        });
+    }
+});
 
 // --- UTILITIES ---
 function debounce(fn, delay = 250) {
@@ -712,7 +760,8 @@ function printReport() {
     }
 }
 
-// Başlangıçta tüm illeri listele
+// Başlangıçta alt grupları doldur ve verileri listele
 document.addEventListener('DOMContentLoaded', () => {
+    populateSubtopics();
     performSearch();
 });
