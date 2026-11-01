@@ -34,6 +34,13 @@ export interface TarimRecord {
   donem?: string;
   veri_durumu?: VeriDurumuType;
 
+  // AB El Kitabı 2020, TAORBA 2008_2 ve CPA 2008 Sınıflamaları
+  taorba2008_2?: string;
+  cpa2008?: string;
+  ab_grup_kod?: string;
+  ab_grup_adi?: string;
+  madde_endeksi_2020?: number;
+
   // Hesaplanmış metrikler (Sadece kurallara uyuyorsa türetilir)
   hesaplanan_gelir_tl?: number;
   hesaplanan_brut_marj_tl?: number;
@@ -394,6 +401,9 @@ export function exportRecordsToCSV(records: TarimRecord[]): string {
     maliyet_durumu: r.maliyet_durumu ?? '',
     donem: r.donem ?? '',
     veri_durumu: r.veri_durumu ?? '',
+    taorba2008_2: r.taorba2008_2 ?? '',
+    cpa2008: r.cpa2008 ?? '',
+    ab_grup_kod: r.ab_grup_kod ?? '',
     hesaplanan_gelir_tl: r.hesaplanan_gelir_tl ?? '',
     hesaplanan_brut_marj_tl: r.hesaplanan_brut_marj_tl ?? '',
     marj_durumu: r.marj_hesaplanabilir ? 'Hesaplandı' : (r.marj_engeli_sebebi ?? 'Hesaplanamaz')

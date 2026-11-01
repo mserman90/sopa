@@ -16,7 +16,8 @@ import {
 import { sourceCatalog } from '../data/sourceCatalog.ts';
 import { 
   executeAgriQuery, QueryResultItem, MASTER_AGRI_CATALOG, 
-  findRegionForCity, getSeasonalityFactor 
+  findRegionForCity, getSeasonalityFactor,
+  EU_HANDBOOK_2020_GROUPS, calculateGroupPriceIndices
 } from '../lib/queryEngine.ts';
 
 const STORAGE_KEY = 'tarimviz_user_records_v1';
@@ -40,6 +41,7 @@ export const Home: React.FC = () => {
   const [queryCity, setQueryCity] = useState<string>('Konya');
   const [queryType, setQueryType] = useState<'hepsi' | 'cikti' | 'girdi'>('hepsi');
   const [queryGroup, setQueryGroup] = useState<string>('all');
+  const [queryEUGrup, setQueryEUGrup] = useState<string>('all');
   const [queryYear, setQueryYear] = useState<number>(2026);
   const [queryMonth, setQueryMonth] = useState<number>(10); // Ekim
   const [queryResults, setQueryResults] = useState<QueryResultItem[]>([]);
@@ -54,10 +56,15 @@ export const Home: React.FC = () => {
   const [validationAlert, setValidationAlert] = useState<{ errors: string[]; warnings: string[] } | null>(null);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
 
+  // AB El Kitabı 2020 Grup Endeksleri (2020=100)
+  const groupIndices = useMemo(() => {
+    return calculateGroupPriceIndices(queryResults);
+  }, [queryResults]);
+
   // İlk sorgulamayı otomatik çalıştır
   useEffect(() => {
     runEngineQuery();
-  }, [queryCity, queryType, queryGroup, queryYear, queryMonth]);
+  }, [queryCity, queryType, queryGroup, queryEUGrup, queryYear, queryMonth]);
 
   // LocalStorage'dan kayıtları yükleme
   useEffect(() => {
@@ -94,6 +101,7 @@ export const Home: React.FC = () => {
       il: queryCity,
       tur: queryType,
       anaGrup: queryGroup === 'all' ? undefined : queryGroup,
+      abGrupKod: queryEUGrup === 'all' ? undefined : queryEUGrup,
       yil: queryYear,
       ay: queryMonth
     });
@@ -124,7 +132,12 @@ export const Home: React.FC = () => {
       donem: item.donemAdi,
       veri_durumu: 'kesin',
       hesaplanan_gelir_tl: hesaplananGelir,
-      marj_hesaplanabilir: false
+      marj_hesaplanabilir: false,
+      taorba2008_2: item.taorba2008_2,
+      cpa2008: item.cpa2008,
+      ab_grup_kod: item.abElKitabi2020.altGrupKod,
+      ab_grup_adi: item.abElKitabi2020.altGrupAdi,
+      madde_endeksi_2020: item.endeksBilgisi.maddeFiyatEndeksi
     };
 
     const updated = [newRecord, ...records];
@@ -157,7 +170,12 @@ export const Home: React.FC = () => {
         donem: item.donemAdi,
         veri_durumu: 'kesin',
         hesaplanan_gelir_tl: hesaplananGelir,
-        marj_hesaplanabilir: false
+        marj_hesaplanabilir: false,
+        taorba2008_2: item.taorba2008_2,
+        cpa2008: item.cpa2008,
+        ab_grup_kod: item.abElKitabi2020.altGrupKod,
+        ab_grup_adi: item.abElKitabi2020.altGrupAdi,
+        madde_endeksi_2020: item.endeksBilgisi.maddeFiyatEndeksi
       };
     });
 
@@ -462,8 +480,8 @@ export const Home: React.FC = () => {
                   </div>
                 </div>
 
-                {/* Filtreleme Grid */}
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3.5 items-end">
+                {/* Filtreleme Grid (AB 2020 El Kitabı ve TAORBA/CPA Uyumlu) */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-6 gap-3.5 items-end">
                   
                   {/* 1. İl Seçimi */}
                   <div>
@@ -492,15 +510,48 @@ export const Home: React.FC = () => {
                       className="w-full text-xs font-semibold bg-white border border-[#D8D2C2] rounded-lg px-3 py-2 outline-none focus:border-[#5B6B32]"
                     >
                       <option value="hepsi">Tümü (Çıktılar + Girdiler)</option>
-                      <option value="cikti">🌱 Yalnızca Ürün Çıktıları (ÇEGF)</option>
-                      <option value="girdi">🚜 Yalnızca Girdi Maliyetleri (TGFE)</option>
+                      <option value="cikti">🌱 Yalnızca Ürün Çıktıları (ÇEGF / Tarım-ÜFE)</option>
+                      <option value="girdi">🚜 Yalnızca Girdi Maliyetleri (TGFE / Tarım-GFE)</option>
                     </select>
                   </div>
 
-                  {/* 3. Ana Kategori */}
+                  {/* 3. AB El Kitabı 2020 Sınıflaması */}
+                  <div>
+                    <label className="block text-[11px] font-bold text-[#6B7260] uppercase tracking-wider mb-1" title="Avrupa Birliği Tarımsal Fiyat İstatistikleri El Kitabı, 2020">
+                      AB 2020 El Kitabı Grubu
+                    </label>
+                    <select
+                      value={queryEUGrup}
+                      onChange={(e) => setQueryEUGrup(e.target.value)}
+                      className="w-full text-xs font-semibold bg-white border border-[#D8D2C2] rounded-lg px-3 py-2 outline-none focus:border-[#5B6B32]"
+                    >
+                      <option value="all">Tüm AB Grupları (Hepsi)</option>
+                      <optgroup label="🌱 Tarım-ÜFE — 01: Bitkisel Ürünler">
+                        <option value="01.1">01.1: Tahıllar ve Tohumlar</option>
+                        <option value="01.2">01.2: Sanayi Bitkileri</option>
+                        <option value="01.4">01.4: Taze Sebzeler</option>
+                        <option value="01.5">01.5: Meyveler ve Yemişler</option>
+                        <option value="01.7">01.7: Zeytinyağı ve Zeytin</option>
+                      </optgroup>
+                      <optgroup label="🐄 Tarım-ÜFE — 02: Hayvanlar ve Hayvansal Ürünler">
+                        <option value="02.1">02.1: Canlı Hayvanlar (Kümes hariç)</option>
+                        <option value="02.3">02.3: Süt (Milk)</option>
+                        <option value="02.4">02.4: Yumurta (Eggs)</option>
+                        <option value="02.5">02.5: Diğer Hayvansal Ürünler (Bal)</option>
+                      </optgroup>
+                      <optgroup label="🚜 Tarım-GFE — 01: Ara Tüketim Malları">
+                        <option value="01.2_G">01.2: Enerji ve Yağlar (Motorin)</option>
+                        <option value="01.3_G">01.3: Gübreler ve Toprak Geliştiriciler</option>
+                        <option value="01.5_G">01.5: Hayvan Yemleri</option>
+                        <option value="01.9_G">01.9: Diğer Mal ve Hizmetler (İşçilik)</option>
+                      </optgroup>
+                    </select>
+                  </div>
+
+                  {/* 4. Ana Kategori */}
                   <div>
                     <label className="block text-[11px] font-bold text-[#6B7260] uppercase tracking-wider mb-1">
-                      Ürün / Girdi Grubu
+                      Ulusal Grup
                     </label>
                     <select
                       value={queryGroup}
@@ -521,7 +572,7 @@ export const Home: React.FC = () => {
                     </select>
                   </div>
 
-                  {/* 4. Yıl */}
+                  {/* 5. Yıl */}
                   <div>
                     <label className="block text-[11px] font-bold text-[#6B7260] uppercase tracking-wider mb-1">
                       Referans Yılı
@@ -537,7 +588,7 @@ export const Home: React.FC = () => {
                     </select>
                   </div>
 
-                  {/* 5. Ay / Mevsimsellik */}
+                  {/* 6. Ay / Mevsimsellik */}
                   <div>
                     <label className="block text-[11px] font-bold text-[#6B7260] uppercase tracking-wider mb-1">
                       Ay (Mevsimsellik Çarpanı)
@@ -554,6 +605,40 @@ export const Home: React.FC = () => {
                     </select>
                   </div>
                 </div>
+
+                {/* AB 2020 El Kitabı Sınıflaması Ağırlıklı Grup Fiyat Endeksleri Özeti */}
+                {groupIndices.length > 0 && (
+                  <div className="mt-4 pt-4 border-t border-[#F0EDE4]">
+                    <div className="flex flex-wrap items-center justify-between mb-2.5 gap-2">
+                      <span className="text-[11px] font-bold text-[#5B6B32] uppercase tracking-wider flex items-center gap-1.5">
+                        <Scale className="w-3.5 h-3.5" /> AB Tarımsal Fiyat İstatistikleri El Kitabı, 2020 — Ağırlıklı Grup Fiyat Endeksleri (2020=100)
+                      </span>
+                      <span className="text-[10px] text-[#6B7260] italic">
+                        Laspeyres Ağırlıklı Endeksleme (TÜİK & Eurostat ‰ Promil Ağırlıkları)
+                      </span>
+                    </div>
+
+                    <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2.5">
+                      {groupIndices.map(g => (
+                        <div key={g.altGrupKod} className="bg-[#FBF9F4] p-2.5 rounded-xl border border-[#D8D2C2] hover:border-[#5B6B32] transition-colors shadow-2xs">
+                          <div className="flex items-center justify-between text-[10px] font-bold text-[#6B7260]">
+                            <span className="font-mono bg-white px-1.5 py-0.5 rounded border border-[#D8D2C2]">{g.altGrupKod.replace('_G', '')}</span>
+                            <span className={`px-1.5 py-0.5 rounded text-[9px] font-extrabold ${g.endeksTuru === 'Tarım-ÜFE' ? 'bg-[#EFF2E6] text-[#5B6B32]' : 'bg-[#FBF1E6] text-[#C47A3A]'}`}>
+                              {g.endeksTuru}
+                            </span>
+                          </div>
+                          <div className="text-base font-extrabold text-[#1C2418] mt-1 tabular-numbers">
+                            {g.agirlikliGrupEndeksi.toLocaleString('tr-TR', { minimumFractionDigits: 1, maximumFractionDigits: 1 })}
+                            <span className="text-[10px] font-normal text-[#6B7260] ml-1">p</span>
+                          </div>
+                          <div className="text-[10px] text-[#6B7260] truncate mt-0.5" title={g.altGrupAdi}>
+                            {g.altGrupAdi.split(':')[1]?.trim() || g.altGrupAdi}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
 
                 {/* Bölgesel Çarpan ve Metodoloji Özeti */}
                 <div className="grid grid-cols-1 md:grid-cols-4 gap-3 mt-4 pt-4 border-t border-[#F0EDE4] text-xs">
@@ -581,7 +666,7 @@ export const Home: React.FC = () => {
                 <div className="p-4 border-b border-[#D8D2C2] bg-[#F0EDE4]/60 flex flex-wrap justify-between items-center gap-3">
                   <div className="flex items-center gap-3">
                     <h4 className="font-bold text-sm text-[#1C2418]">
-                      {queryCity} İli Detaylı Fiyat ve Maliyet Listesi
+                      {queryCity} İli Detaylı Fiyat, Maliyet ve Endeks Listesi
                     </h4>
                     <span className="atlas-badge atlas-badge-olive text-xs">
                       {queryResults.length} Kalem Listeleniyor
@@ -589,7 +674,7 @@ export const Home: React.FC = () => {
                   </div>
 
                   <div className="text-xs text-[#6B7260]">
-                    Tüm fiyatlar TL cinsindedir ve mevsimsellik ile bölge katsayısı uygulanmıştır.
+                    Madde düzeyinde <strong>TAORBA 2008_2</strong> ve <strong>CPA 2008</strong> sınıflamaları ile <strong>2020=100</strong> baz endeksleri içerir.
                   </div>
                 </div>
 
@@ -597,84 +682,95 @@ export const Home: React.FC = () => {
                   <table className="w-full text-xs text-left">
                     <thead className="bg-[#F0EDE4] text-[#1C2418] uppercase tracking-wider font-bold border-b border-[#D8D2C2]">
                       <tr>
-                        <th className="px-4 py-3">Tür</th>
+                        <th className="px-3 py-3">Tür</th>
+                        <th className="px-3 py-3">AB 2020 Sınıflaması</th>
                         <th className="px-4 py-3">Ürün / Girdi Adı</th>
-                        <th className="px-4 py-3">En Alt Kırılım / Spesifikasyon</th>
-                        <th className="px-3 py-3 text-right">TÜİK Fiyat</th>
-                        <th className="px-3 py-3 text-right">EMB Borsa</th>
-                        <th className="px-3 py-3 text-right">Hal (HKS)</th>
-                        <th className="px-4 py-3 text-right font-extrabold text-[#1C2418]">Sentez Birim Değer</th>
-                        <th className="px-3 py-3 text-center">Çapraz Güven</th>
-                        <th className="px-3 py-3">Veri Seviyesi</th>
-                        <th className="px-4 py-3 text-center">İşlem</th>
+                        <th className="px-3 py-3">Madde Kodları (TAORBA & CPA)</th>
+                        <th className="px-3 py-3">En Alt Kırılım / Kalite</th>
+                        <th className="px-3 py-3 text-right">TÜİK / Borsa / Hal</th>
+                        <th className="px-4 py-3 text-right font-extrabold text-[#1C2418]">Birim Fiyat</th>
+                        <th className="px-3 py-3 text-right">Endeks (2020=100)</th>
+                        <th className="px-2 py-3 text-center">Güven</th>
+                        <th className="px-3 py-3 text-center">İşlem</th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-[#D8D2C2] bg-white">
                       {queryResults.map(item => (
                         <tr key={item.id} className="hover:bg-[#FBF9F4] transition-colors group">
                           {/* Tür */}
-                          <td className="px-4 py-3">
+                          <td className="px-3 py-3 whitespace-nowrap">
                             <span className={`atlas-badge ${item.tur === 'cikti' ? 'atlas-badge-olive' : 'atlas-badge-copper'}`}>
                               {item.tur === 'cikti' ? '🌱 Çıktı' : '🚜 Girdi'}
                             </span>
                           </td>
 
+                          {/* AB 2020 Sınıflaması */}
+                          <td className="px-3 py-3 whitespace-nowrap">
+                            <span className="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold bg-[#EFF2E6] text-[#5B6B32] border border-[#BDC8A3]" title={item.abElKitabi2020.altGrupAdi}>
+                              AB {item.abElKitabi2020.altGrupKod.replace('_G', '')}
+                            </span>
+                          </td>
+
                           {/* Ürün Adı */}
-                          <td className="px-4 py-3 font-bold text-[#1C2418]">
+                          <td className="px-4 py-3 font-bold text-[#1C2418] min-w-[180px]">
                             <div>{item.urunAdi}</div>
                             <span className="text-[10px] text-[#6B7260] font-normal">{item.anaGrup} • {item.altGrup}</span>
                           </td>
 
+                          {/* Madde Kodları (TAORBA 2008_2 & CPA 2008) */}
+                          <td className="px-3 py-3 whitespace-nowrap">
+                            <div className="space-y-0.5 font-mono text-[10px]">
+                              <div className="bg-slate-100 text-slate-800 px-1.5 py-0.5 rounded border border-slate-200" title="TÜİK TAORBA 2008_2 Madde Kodu">
+                                <strong>TAORBA:</strong> {item.taorba2008_2}
+                              </div>
+                              <div className="bg-amber-50 text-amber-900 px-1.5 py-0.5 rounded border border-amber-200" title="Eurostat CPA 2008 Kodu">
+                                <strong>CPA:</strong> {item.cpa2008}
+                              </div>
+                            </div>
+                          </td>
+
                           {/* Spesifikasyon */}
-                          <td className="px-4 py-3 text-[#6B7260] max-w-xs leading-tight">
+                          <td className="px-3 py-3 text-[#6B7260] max-w-[200px] leading-tight">
                             <span className="text-[11px] block">{item.spesifikasyon}</span>
-                          </td>
-
-                          {/* TÜİK Fiyatı */}
-                          <td className="px-3 py-3 text-right tabular-numbers text-[#6B7260]">
-                            {item.kaynakCaprazKontrol.tuikFiyati.toLocaleString('tr-TR', { minimumFractionDigits: 2 })}
-                          </td>
-
-                          {/* EMB Borsa Fiyatı */}
-                          <td className="px-3 py-3 text-right tabular-numbers text-[#6B7260]">
-                            {item.kaynakCaprazKontrol.embBorsaFiyati.toLocaleString('tr-TR', { minimumFractionDigits: 2 })}
-                          </td>
-
-                          {/* Hal Fiyatı */}
-                          <td className="px-3 py-3 text-right tabular-numbers text-[#6B7260]">
-                            {item.kaynakCaprazKontrol.halFiyati.toLocaleString('tr-TR', { minimumFractionDigits: 2 })}
-                          </td>
-
-                          {/* Sentez Fiyat */}
-                          <td className="px-4 py-3 text-right tabular-numbers">
-                            <span className={`font-extrabold text-sm ${item.tur === 'cikti' ? 'text-[#5B6B32]' : 'text-[#C47A3A]'}`}>
-                              {item.hesaplananFiyat.toLocaleString('tr-TR', { minimumFractionDigits: 2 })} {item.fiyatBirimi}
+                            <span className="text-[10px] text-emerald-700 block mt-0.5 font-semibold">
+                              {item.fallbackSeviyesi === 'il_dogrudan' ? '✓ Doğrudan İl Tescili' : '⇄ Bölgesel İBBS-2'}
                             </span>
                           </td>
 
+                          {/* Üçlü Çapraz Kontrol */}
+                          <td className="px-3 py-3 text-right tabular-numbers text-[11px] text-[#6B7260] whitespace-nowrap">
+                            <div>TÜİK: {item.kaynakCaprazKontrol.tuikFiyati.toLocaleString('tr-TR', { minimumFractionDigits: 2 })}</div>
+                            <div>Borsa: {item.kaynakCaprazKontrol.embBorsaFiyati.toLocaleString('tr-TR', { minimumFractionDigits: 2 })}</div>
+                            <div>Hal: {item.kaynakCaprazKontrol.halFiyati.toLocaleString('tr-TR', { minimumFractionDigits: 2 })}</div>
+                          </td>
+
+                          {/* Sentez Fiyat */}
+                          <td className="px-4 py-3 text-right tabular-numbers whitespace-nowrap">
+                            <span className={`font-extrabold text-sm ${item.tur === 'cikti' ? 'text-[#5B6B32]' : 'text-[#C47A3A]'}`}>
+                              {item.hesaplananFiyat.toLocaleString('tr-TR', { minimumFractionDigits: 2 })}
+                            </span>
+                            <span className="text-[10px] text-[#6B7260] ml-1">{item.fiyatBirimi}</span>
+                          </td>
+
+                          {/* 2020=100 Endeks */}
+                          <td className="px-3 py-3 text-right tabular-numbers whitespace-nowrap">
+                            <div className="font-bold text-[#1C2418] text-xs">
+                              {item.endeksBilgisi.maddeFiyatEndeksi.toLocaleString('tr-TR', { minimumFractionDigits: 1, maximumFractionDigits: 1 })}
+                            </div>
+                            <div className="text-[10px] text-[#6B7260]">
+                              Baz: {item.endeksBilgisi.bazFiyat2020} TL
+                            </div>
+                          </td>
+
                           {/* Güven Skoru */}
-                          <td className="px-3 py-3 text-center">
-                            <span className="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-50 text-emerald-800 border border-emerald-200">
+                          <td className="px-2 py-3 text-center whitespace-nowrap">
+                            <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-bold bg-emerald-50 text-emerald-800 border border-emerald-200">
                               %{item.kaynakCaprazKontrol.guvenSkoru}
                             </span>
                           </td>
 
-                          {/* Fallback Seviyesi */}
-                          <td className="px-3 py-3">
-                            <span 
-                              className={`text-[10px] font-semibold px-2 py-0.5 rounded ${
-                                item.fallbackSeviyesi === 'il_dogrudan' 
-                                  ? 'bg-blue-50 text-blue-700' 
-                                  : 'bg-amber-50 text-amber-800'
-                              }`}
-                              title={item.fallbackAciklamasi}
-                            >
-                              {item.fallbackSeviyesi === 'il_dogrudan' ? 'İl Tescilli' : 'Bölgesel Ort.'}
-                            </span>
-                          </td>
-
                           {/* İşlem */}
-                          <td className="px-4 py-3 text-center">
+                          <td className="px-3 py-3 text-center whitespace-nowrap">
                             <button
                               onClick={() => handleAddQueryItemToAnalysis(item)}
                               className="px-2.5 py-1 text-[11px] font-semibold bg-[#EFF2E6] hover:bg-[#E3E8D3] text-[#5B6B32] border border-[#BDC8A3] rounded-md transition-all shadow-2xs"
@@ -873,7 +969,21 @@ export const Home: React.FC = () => {
                             {r.sektor}
                           </span>
                         </td>
-                        <td className="px-4 py-3 font-medium text-[#1C2418]">{r.urun}</td>
+                        <td className="px-4 py-3 font-medium text-[#1C2418]">
+                          <div>{r.urun}</div>
+                          {r.taorba2008_2 && (
+                            <div className="flex flex-wrap items-center gap-1.5 mt-1 text-[9px] font-mono text-[#6B7260]">
+                              <span className="bg-slate-100 px-1 py-0.5 rounded border border-slate-200">TAORBA: {r.taorba2008_2}</span>
+                              <span className="bg-amber-50 text-amber-900 px-1 py-0.5 rounded border border-amber-200">CPA: {r.cpa2008}</span>
+                              {r.ab_grup_kod && (
+                                <span className="bg-[#EFF2E6] text-[#5B6B32] px-1 py-0.5 rounded border border-[#BDC8A3]">AB {r.ab_grup_kod.replace('_G', '')}</span>
+                              )}
+                              {r.madde_endeksi_2020 && (
+                                <span className="text-[#5B6B32] font-bold">Endeks: {r.madde_endeksi_2020}</span>
+                              )}
+                            </div>
+                          )}
+                        </td>
                         <td className="px-4 py-3 text-right tabular-numbers font-semibold">
                           {r.uretim_miktari.toLocaleString('tr-TR')}
                         </td>

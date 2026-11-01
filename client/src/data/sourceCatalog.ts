@@ -12,6 +12,39 @@ export interface SourceMetadata {
 
 export const sourceCatalog: SourceMetadata[] = [
   {
+    id: 'eurostat-handbook-2020',
+    name: 'AB Tarımsal Fiyat İstatistikleri El Kitabı, 2020',
+    institution: 'Avrupa Birliği İstatistik Ofisi (Eurostat)',
+    description: 'Tarımsal çıktı (Tarım-ÜFE) ve girdi (Tarım-GFE) fiyat endekslerinin hiyerarşik sınıflandırma ve metodolojik hesaplama rehberi.',
+    frequency: 'Sürekli / 5 Yıllık Baz Yıl Güncellemesi (2020=100)',
+    coverage: 'AB Üye Ülkeleri ve Aday Ülkeler (TÜİK Uyumlu)',
+    officialUrl: 'https://ec.europa.eu/eurostat/web/agriculture/data/database',
+    sdmxAvailable: true,
+    notes: 'Çıktılarda 01 Bitkisel / 02 Hayvansal; Girdilerde 01 Ara Tüketim / 02 Yatırım Mal ve Hizmetleri ana ve alt gruplarını tanımlar.'
+  },
+  {
+    id: 'tuik-taorba-2008_2',
+    name: 'TAORBA 2008_2 Ürün Sınıflaması',
+    institution: 'Türkiye İstatistik Kurumu (TÜİK)',
+    description: 'Tarım, Ormancılık ve Balıkçılık Ürünleri Ulusal Sınıflaması. Tarım-ÜFE ve ÇEGF madde düzeyindeki 10 haneli resmî kodlama.',
+    frequency: 'Sürekli Güncel Madde Listesi',
+    coverage: 'Türkiye Geneli / 81 İl Madde Düzeyi',
+    officialUrl: 'https://data.tuik.gov.tr/Kategori/GetKategori?p=Tarim-111',
+    sdmxAvailable: true,
+    notes: 'Tüm tarımsal çıktılar ve girdiler madde düzeyinde 10 haneli TAORBA kodu ile tekilleştirilir.'
+  },
+  {
+    id: 'cpa-2008',
+    name: 'CPA 2008 (Faaliyete Göre Ürün Sınıflaması)',
+    institution: 'Avrupa Ekonomik Topluluğu (EEC) / Eurostat',
+    description: 'Tarımsal girdi ve çıktı maddelerinin uluslararası düzeyde karşılaştırılabilmesini sağlayan 6 basamaklı ekonomik ürün sınıflaması.',
+    frequency: 'Uluslararası Standart Sınıflama',
+    coverage: 'Avrupa Topluluğu ve TÜİK Veri Altyapısı',
+    officialUrl: 'https://ec.europa.eu/eurostat/ramon/nomenclatures/',
+    sdmxAvailable: true,
+    notes: 'Girdi tarafında gübre (20.15), motorin (19.20), yem (10.91); Çıktı tarafında buğday (01.11), süt (01.41) vb. kodlanır.'
+  },
+  {
     id: 'tuik-bitkisel',
     name: 'Bitkisel Üretim İstatistikleri (BÜİ)',
     institution: 'Türkiye İstatistik Kurumu (TÜİK)',
