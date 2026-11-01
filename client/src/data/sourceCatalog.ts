@@ -112,13 +112,13 @@ export const sourceCatalog: SourceMetadata[] = [
   },
   {
     id: 'tuik-tgfe',
-    name: 'Tarımsal Girdi Fiyat Endeksi (Tarım-GFE)',
-    institution: 'Türkiye İstatistik Kurumu (TÜİK)',
-    description: 'Tarımsal üretimde kullanılan mal ve hizmetlerin (gübre, mazot, tohum, yem, veteriner vb.) maliyet endeksi.',
-    frequency: 'Aylık',
-    coverage: 'Ulusal (Türkiye Geneli)',
-    officialUrl: 'https://data.tuik.gov.tr/Bulten/Index?p=Tarimsal-Girdi-Fiyat-Endeksi',
+    name: 'Tarımsal Girdi Fiyat Endeksi (Tarım-GFE / TGFE — 2020=100)',
+    institution: 'Türkiye İstatistik Kurumu (TÜİK) — Tarım İstatistikleri Dairesi',
+    description: 'Tarımsal üretimde kullanılan mal ve hizmetler (Girdi 1: %88,87 ara tüketim) ile tarımsal yatırıma katkı sağlayan mal ve hizmetlerin (Girdi 2: %11,13 sermaye/traktör/alet-makine) fiyat değişimlerini ölçen bileşik endeks.',
+    frequency: 'Aylık (Her ayın 1\'i ile 31\'i arası çiftçi alış fiyatları)',
+    coverage: 'Ulusal ve Bölgesel Düzey (2020=100 Temel Yıllı)',
+    officialUrl: 'https://biruni.tuik.gov.tr/medas/?kn=82&locale=tr',
     sdmxAvailable: true,
-    notes: 'Kısıt: Ulusal girdi endeksleri tek başına il bazında doğrudan gerçekleşen maliyet kabul edilmez; kullanıcı ölçümü gerekir.'
+    notes: 'Resmî Ağırlık Şeması: Girdi 1: %88,87; Girdi 2: %11,13. Cari ağırlıklar temel yıldan bir önceki yıl (2019), temel yıl (2020) ve bir sonraki yıl (2021) 3 yıllık ekonomik hesaplar ortalamasıdır.'
   }
 ];

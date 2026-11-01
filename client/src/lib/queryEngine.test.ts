@@ -171,4 +171,32 @@ describe('TarımViz Akıllı Sorgulama ve Endeks Hesaplama Motoru Doğrulaması'
     expect(tahilOzet?.toplamAgirlikPromil).toBeGreaterThan(100);
   });
 
+  it('10. 2020=100 Tarım-GFE Resmî Ağırlık Şeması (%88,87 Girdi 1 ve %11,13 Girdi 2) uygulanmalıdır', async () => {
+    // 1. Metodolojik sabitler doğrulanmalı
+    const { TUIK_TGFE_METHODOLOGY, calculateCompositeTGFE } = await import('./queryEngine.ts');
+    expect(TUIK_TGFE_METHODOLOGY.anaGruplar.girdi1.agirlikYuzde).toBe(88.87);
+    expect(TUIK_TGFE_METHODOLOGY.anaGruplar.girdi2.agirlikYuzde).toBe(11.13);
+    expect(TUIK_TGFE_METHODOLOGY.anaGruplar.girdi1.agirlikYuzde + TUIK_TGFE_METHODOLOGY.anaGruplar.girdi2.agirlikYuzde).toBe(100.00);
+
+    // 2. Girdi sorgusunda Girdi 1 (Ara tüketim) ve Girdi 2 (Yatırım: Traktör/Makine) bulunmalı
+    const results = executeAgriQuery({ il: 'Konya', tur: 'girdi', yil: 2026, ay: 10 });
+    const traktor = results.find(r => r.urunAdi.includes('Traktör'));
+    expect(traktor).toBeDefined();
+    expect(traktor?.abElKitabi2020.anaGrupKod).toBe('02');
+    expect(traktor?.cpa2008).toBe('28.30.22');
+
+    const gubre = results.find(r => r.urunAdi.includes('Üre'));
+    expect(gubre).toBeDefined();
+    expect(gubre?.abElKitabi2020.anaGrupKod).toBe('01');
+
+    // 3. Bileşik Tarım-GFE Endeksi: 0.8887 * G1 + 0.1113 * G2 formülü ile hesaplanmalı
+    const composite = calculateCompositeTGFE(results);
+    expect(composite.girdi1Endeksi).toBeGreaterThan(0);
+    expect(composite.girdi2Endeksi).toBeGreaterThan(0);
+    expect(composite.genelTGFEEndeksi).toBeCloseTo(
+      Number(((0.8887 * composite.girdi1Endeksi) + (0.1113 * composite.girdi2Endeksi)).toFixed(2)),
+      1
+    );
+  });
+
 });

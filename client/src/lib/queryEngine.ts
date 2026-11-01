@@ -105,11 +105,19 @@ export const EU_HANDBOOK_2020_GROUPS: EUHandbookGroup[] = [
     aciklama: 'Doğal süzme/petek bal, balmumu, kırkım yapağı/yün.'
   },
 
-  // --- GİRDİ (Tarım-GFE / TGFE) GRUPLARI ---
+  // --- GİRDİ 1: TARIMDA KULLANILAN MAL VE HİZMETLER (ARA TÜKETİM — RESMÎ AĞIRLIK: %88,87) ---
+  {
+    kod: '01.1_G',
+    anaGrupKod: '01',
+    anaGrupAdi: 'Girdi 1: Tarımda Kullanılan Mal ve Hizmetler (Ara Tüketim - %88,87)',
+    altGrupAdi: '01.1: Tohum ve Dikim Materyali (Seeds and planting stock)',
+    endeksTuru: 'Tarım-GFE',
+    aciklama: 'Sertifikalı tohumluklar, fidanlar, sebze fideleri ve dikim materyalleri.'
+  },
   {
     kod: '01.2_G',
     anaGrupKod: '01',
-    anaGrupAdi: '01: Tarımda Fiilen Tüketilen Mal ve Hizmetler (Ara Tüketim)',
+    anaGrupAdi: 'Girdi 1: Tarımda Kullanılan Mal ve Hizmetler (Ara Tüketim - %88,87)',
     altGrupAdi: '01.2: Enerji ve Yağlar (Energy and lubricants)',
     endeksTuru: 'Tarım-GFE',
     aciklama: 'Tarımsal motorin (mazot), elektrik, madeni yağlar.'
@@ -117,15 +125,23 @@ export const EU_HANDBOOK_2020_GROUPS: EUHandbookGroup[] = [
   {
     kod: '01.3_G',
     anaGrupKod: '01',
-    anaGrupAdi: '01: Tarımda Fiilen Tüketilen Mal ve Hizmetler (Ara Tüketim)',
+    anaGrupAdi: 'Girdi 1: Tarımda Kullanılan Mal ve Hizmetler (Ara Tüketim - %88,87)',
     altGrupAdi: '01.3: Gübreler ve Toprak Geliştiriciler (Fertilisers and soil improvers)',
     endeksTuru: 'Tarım-GFE',
     aciklama: 'Üre, DAP, Kompoze taban gübreleri, potasyum ve mikro elementler.'
   },
   {
+    kod: '01.4_G',
+    anaGrupKod: '01',
+    anaGrupAdi: 'Girdi 1: Tarımda Kullanılan Mal ve Hizmetler (Ara Tüketim - %88,87)',
+    altGrupAdi: '01.4: Bitki Koruma Ürünleri ve Pestisitler (Plant protection products)',
+    endeksTuru: 'Tarım-GFE',
+    aciklama: 'Tarımsal ilaçlar, herbisit, fungusit, insektisit vb.'
+  },
+  {
     kod: '01.5_G',
     anaGrupKod: '01',
-    anaGrupAdi: '01: Tarımda Fiilen Tüketilen Mal ve Hizmetler (Ara Tüketim)',
+    anaGrupAdi: 'Girdi 1: Tarımda Kullanılan Mal ve Hizmetler (Ara Tüketim - %88,87)',
     altGrupAdi: '01.5: Hayvan Yemleri (Animal feedingstuffs)',
     endeksTuru: 'Tarım-GFE',
     aciklama: 'Büyükbaş besi ve süt fabrika yemleri, kepek, küspe, kaba yem.'
@@ -133,10 +149,20 @@ export const EU_HANDBOOK_2020_GROUPS: EUHandbookGroup[] = [
   {
     kod: '01.9_G',
     anaGrupKod: '01',
-    anaGrupAdi: '01: Tarımda Fiilen Tüketilen Mal ve Hizmetler (Ara Tüketim)',
+    anaGrupAdi: 'Girdi 1: Tarımda Kullanılan Mal ve Hizmetler (Ara Tüketim - %88,87)',
     altGrupAdi: '01.9: Diğer Mal ve Hizmetler (Other goods and services)',
     endeksTuru: 'Tarım-GFE',
     aciklama: 'Tarımsal vasıfsız/vasıflı çapa ve hasat iş gücü yevmiyeleri, nakliye ve analiz hizmetleri.'
+  },
+
+  // --- GİRDİ 2: TARIMSAL YATIRIMA KATKI SAĞLAYAN MAL VE HİZMETLER (YATIRIM — RESMÎ AĞIRLIK: %11,13) ---
+  {
+    kod: '02.1_G',
+    anaGrupKod: '02',
+    anaGrupAdi: 'Girdi 2: Tarımsal Yatırıma Katkı Sağlayan Mal ve Hizmetler (Yatırım - %11,13)',
+    altGrupAdi: '02.1: Makine ve Ekipman (Materials / Traktör ve Tarım Makineleri)',
+    endeksTuru: 'Tarım-GFE',
+    aciklama: 'Traktörler, biçerdöverler, mibzer, pulluk ve tarımsal yatırım makineleri.'
   }
 ];
 
@@ -1094,8 +1120,192 @@ export const MASTER_AGRI_CATALOG: MasterCatalogItem[] = [
     ulusalTabanFiyat: 850.00,
     birincilKaynak: 'TÜİK Tarımsal İş Gücü Ücret İstatistikleri',
     oncelikliIller: ['Adana', 'Mersin', 'Antalya', 'Giresun', 'Malatya', 'Şanlıurfa']
+  },
+  {
+    id: 'girdi-ilac-herbisit',
+    kod: 'TGFE-I01',
+    tur: 'girdi',
+    sektor: 'bitkisel',
+    abElKitabi2020: {
+      anaGrupKod: '01',
+      anaGrupAdi: 'Girdi 1: Tarımda Kullanılan Mal ve Hizmetler (Ara Tüketim - %88,87)',
+      altGrupKod: '01.4_G',
+      altGrupAdi: '01.4: Bitki Koruma Ürünleri ve Pestisitler'
+    },
+    taorba2008_2: '20.20.12.00.00',
+    cpa2008: '20.20.12',
+    anaGrup: 'Tarımsal İlaçlar ve Kimyasallar',
+    altGrup: 'Herbisitler',
+    urunAdi: 'Geniş Spektrumlu Yabancı Ot İlacı (Herbisit)',
+    spesifikasyon: 'Hububat dar ve geniş yapraklı ot ilacı, 1 Litre ambalaj bayi teslim',
+    varsayilanBirim: 'Litre',
+    fiyatBirimi: 'TL/Lt',
+    bazYil2020Fiyat: 95.00,
+    endeksAgirligiPromil: 68.0,
+    endeksTuru: 'Tarım-GFE',
+    ulusalTabanFiyat: 720.00,
+    birincilKaynak: 'TÜİK TGFE + T.C. Tarım ve Orman Bakanlığı İlaç Bayi Fiyatları',
+    oncelikliIller: ['Konya', 'Adana', 'Tekirdağ', 'Şanlıurfa', 'Ankara']
+  },
+  {
+    id: 'girdi-tohum-bugday',
+    kod: 'TGFE-T01',
+    tur: 'girdi',
+    sektor: 'bitkisel',
+    abElKitabi2020: {
+      anaGrupKod: '01',
+      anaGrupAdi: 'Girdi 1: Tarımda Kullanılan Mal ve Hizmetler (Ara Tüketim - %88,87)',
+      altGrupKod: '01.1_G',
+      altGrupAdi: '01.1: Tohum ve Dikim Materyali (Seeds and planting stock)'
+    },
+    taorba2008_2: '01.11.80.00.00',
+    cpa2008: '01.11.80',
+    anaGrup: 'Tohum ve Dikim Materyalleri',
+    altGrup: 'Sertifikalı Tohum',
+    urunAdi: 'Sertifikalı Ekmeklik Buğday Tohumluğu (Mavi Sertifika)',
+    spesifikasyon: 'Çimlenme min %90, Safiyet min %98, 50 kg çuvallı tohumluk',
+    varsayilanBirim: 'Kg',
+    fiyatBirimi: 'TL/Kg',
+    bazYil2020Fiyat: 2.80,
+    endeksAgirligiPromil: 55.0,
+    endeksTuru: 'Tarım-GFE',
+    ulusalTabanFiyat: 19.50,
+    birincilKaynak: 'TÜİK TGFE + TİGEM Sertifikalı Tohum Satış Fiyatı',
+    oncelikliIller: ['Konya', 'Eskişehir', 'Ankara', 'Tekirdağ', 'Diyarbakır']
+  },
+
+  // ==========================================================================
+  // GİRDİ 2: TARIMSAL YATIRIMA KATKI SAĞLAYAN MAL VE HİZMETLER (YATIRIM — %11,13)
+  // ==========================================================================
+  {
+    id: 'girdi-yatirim-traktor',
+    kod: 'TGFE-YAT01',
+    tur: 'girdi',
+    sektor: 'bitkisel',
+    abElKitabi2020: {
+      anaGrupKod: '02',
+      anaGrupAdi: 'Girdi 2: Tarımsal Yatırıma Katkı Sağlayan Mal ve Hizmetler (Yatırım - %11,13)',
+      altGrupKod: '02.1_G',
+      altGrupAdi: '02.1: Makine ve Ekipman (Materials / Traktör ve Tarım Makineleri)'
+    },
+    taorba2008_2: '28.30.22.00.00',
+    cpa2008: '28.30.22',
+    anaGrup: 'Tarımsal Yatırım ve Makineler',
+    altGrup: 'Traktörler',
+    urunAdi: 'Tarımsal Traktör (4WD 75-90 HP Standart Kabinli)',
+    spesifikasyon: '4 silindir turbo intercooler, çift çeker, klima donanımlı anahtar teslim',
+    varsayilanBirim: 'Adet',
+    fiyatBirimi: 'TL/Adet',
+    bazYil2020Fiyat: 185000.00,
+    endeksAgirligiPromil: 75.0,
+    endeksTuru: 'Tarım-GFE',
+    ulusalTabanFiyat: 1650000.00,
+    birincilKaynak: 'TÜİK TGFE + TARMAKBİR Bayi Liste Fiyatları',
+    oncelikliIller: ['Konya', 'Adana', 'Manisa', 'Balıkesir', 'Ankara', 'Bursa']
+  },
+  {
+    id: 'girdi-yatirim-mibzer',
+    kod: 'TGFE-YAT02',
+    tur: 'girdi',
+    sektor: 'bitkisel',
+    abElKitabi2020: {
+      anaGrupKod: '02',
+      anaGrupAdi: 'Girdi 2: Tarımsal Yatırıma Katkı Sağlayan Mal ve Hizmetler (Yatırım - %11,13)',
+      altGrupKod: '02.1_G',
+      altGrupAdi: '02.1: Makine ve Ekipman (Materials / Traktör ve Tarım Makineleri)'
+    },
+    taorba2008_2: '28.30.34.00.00',
+    cpa2008: '28.30.34',
+    anaGrup: 'Tarımsal Yatırım ve Makineler',
+    altGrup: 'Ekim ve Dikim Makineleri',
+    urunAdi: 'Pnömatik Hassas Ekim Mibzeri (4 Sıralı Gübreli)',
+    spesifikasyon: 'Diskli tip, tohum ve taban gübresi sandıklı, hidrolik markörlü',
+    varsayilanBirim: 'Adet',
+    fiyatBirimi: 'TL/Adet',
+    bazYil2020Fiyat: 38000.00,
+    endeksAgirligiPromil: 36.3,
+    endeksTuru: 'Tarım-GFE',
+    ulusalTabanFiyat: 340000.00,
+    birincilKaynak: 'TÜİK TGFE + Zirai Alet ve Ekipman Üreticileri Bülteni',
+    oncelikliIller: ['Konya', 'Edirne', 'Adana', 'Tekirdağ', 'Eskişehir']
   }
 ];
+
+// ============================================================================
+// 4. TÜİK RESMÎ TARIM-GFE AĞIRLIK VE HESAPLAMA METODOLOJİSİ
+// ============================================================================
+
+export const TUIK_TGFE_METHODOLOGY = {
+  temelYil: '2020=100',
+  anaGruplar: {
+    girdi1: {
+      kod: 'Girdi 1',
+      ad: 'Tarımda Kullanılan Mal ve Hizmetler Endeksi (Ara Tüketim)',
+      agirlikYuzde: 88.87,
+      agirlikKatsayisi: 0.8887,
+      tanim: 'Tohum, gübre, hayvan yemi, tarımsal ilaç, fide ve fidan vb. ara tüketim ürünleri.'
+    },
+    girdi2: {
+      kod: 'Girdi 2',
+      ad: 'Tarımsal Yatırıma Katkı Sağlayan Mal ve Hizmetler Endeksi (Yatırım)',
+      agirlikYuzde: 11.13,
+      agirlikKatsayisi: 0.1113,
+      tanim: 'Traktör, alet-makine vb. tarımsal yatırım ürünleri.'
+    }
+  },
+  fiyatKapsami: "Endeksin fiyat kapsamı, çiftçinin ilgili ayın 1'i ile 31'i arasında tarımsal faaliyetlerinde kullanmak üzere veya tarımsal yatırıma katkı sağlamak amacıyla satın aldığı ürünlerin ve hizmetlerin fiyatlarıdır.",
+  cariAgirlikDonemi: 'Temel yıldan bir önceki yıl (2019), temel yıl (2020) ve temel yıldan bir sonrası yıl (2021) 3 yıllık ekonomik hesaplar çalışması ortalaması.',
+  kaynakBaskanlik: 'Tarım İstatistikleri Daire Başkanlığı & Tarımsal Yapı İstatistikleri Grup Başkanlığı'
+};
+
+/**
+ * TÜİK Resmî Ağırlık Şemasına Göre Bileşik Tarım-GFE Endeksi Hesaplar:
+ * Genel Tarım-GFE = (0.8887 * Girdi 1 Endeksi) + (0.1113 * Girdi 2 Endeksi)
+ */
+export function calculateCompositeTGFE(items: QueryResultItem[]): {
+  girdi1Endeksi: number;
+  girdi2Endeksi: number;
+  genelTGFEEndeksi: number;
+  girdi1KalemSayisi: number;
+  girdi2KalemSayisi: number;
+} {
+  const girdiItems = items.filter(i => i.tur === 'girdi');
+  const girdi1Items = girdiItems.filter(i => i.abElKitabi2020.anaGrupKod === '01');
+  const girdi2Items = girdiItems.filter(i => i.abElKitabi2020.anaGrupKod === '02');
+
+  const calcWeighted = (list: QueryResultItem[]): number => {
+    if (list.length === 0) return 0;
+    let sumWeight = 0;
+    let sumProd = 0;
+    for (const item of list) {
+      const cat = MASTER_AGRI_CATALOG.find(m => m.id.includes(item.urunAdi.slice(0, 5)) || m.urunAdi === item.urunAdi);
+      const w = cat?.endeksAgirligiPromil || 50;
+      sumProd += item.endeksBilgisi.maddeFiyatEndeksi * w;
+      sumWeight += w;
+    }
+    return sumWeight > 0 ? Number((sumProd / sumWeight).toFixed(2)) : 0;
+  };
+
+  const g1 = calcWeighted(girdi1Items);
+  const g2 = calcWeighted(girdi2Items);
+
+  let genel = 0;
+  if (g1 > 0 && g2 > 0) {
+    genel = Number(((0.8887 * g1) + (0.1113 * g2)).toFixed(2));
+  } else if (g1 > 0) {
+    genel = g1;
+  } else if (g2 > 0) {
+    genel = g2;
+  }
+
+  return {
+    girdi1Endeksi: g1,
+    girdi2Endeksi: g2,
+    genelTGFEEndeksi: genel,
+    girdi1KalemSayisi: girdi1Items.length,
+    girdi2KalemSayisi: girdi2Items.length
+  };
+}
 
 // ============================================================================
 // 4. ENDEKS HESAPLAMA YARDIMCILARI (EUROSTAT & TÜİK 2020=100 METODOLOJİSİ)

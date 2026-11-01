@@ -17,7 +17,8 @@ import { sourceCatalog } from '../data/sourceCatalog.ts';
 import { 
   executeAgriQuery, QueryResultItem, MASTER_AGRI_CATALOG, 
   findRegionForCity, getSeasonalityFactor,
-  EU_HANDBOOK_2020_GROUPS, calculateGroupPriceIndices
+  EU_HANDBOOK_2020_GROUPS, calculateGroupPriceIndices,
+  TUIK_TGFE_METHODOLOGY, calculateCompositeTGFE
 } from '../lib/queryEngine.ts';
 
 const STORAGE_KEY = 'tarimviz_user_records_v1';
@@ -59,6 +60,11 @@ export const Home: React.FC = () => {
   // AB El Kitabı 2020 Grup Endeksleri (2020=100)
   const groupIndices = useMemo(() => {
     return calculateGroupPriceIndices(queryResults);
+  }, [queryResults]);
+
+  // TÜİK Resmî Tarım-GFE Bileşik Endeksi (2020=100: %88,87 Girdi 1 + %11,13 Girdi 2)
+  const tgfeComposite = useMemo(() => {
+    return calculateCompositeTGFE(queryResults);
   }, [queryResults]);
 
   // İlk sorgulamayı otomatik çalıştır
@@ -559,11 +565,16 @@ export const Home: React.FC = () => {
                         <option value="02.4">02.4: Yumurta (Eggs)</option>
                         <option value="02.5">02.5: Diğer Hayvansal Ürünler (Bal)</option>
                       </optgroup>
-                      <optgroup label="🚜 Tarım-GFE — 01: Ara Tüketim Malları">
+                      <optgroup label="🚜 Tarım-GFE — Girdi 1: Ara Tüketim Malları (%88,87 Ağırlık)">
+                        <option value="01.1_G">01.1: Tohum ve Dikim Materyali</option>
                         <option value="01.2_G">01.2: Enerji ve Yağlar (Motorin)</option>
                         <option value="01.3_G">01.3: Gübreler ve Toprak Geliştiriciler</option>
+                        <option value="01.4_G">01.4: Bitki Koruma Ürünleri (Tarımsal İlaçlar)</option>
                         <option value="01.5_G">01.5: Hayvan Yemleri</option>
-                        <option value="01.9_G">01.9: Diğer Mal ve Hizmetler (İşçilik)</option>
+                        <option value="01.9_G">01.9: Diğer Mal ve Hizmetler (İşçilik vb.)</option>
+                      </optgroup>
+                      <optgroup label="🚜 Tarım-GFE — Girdi 2: Tarımsal Yatırıma Katkı Sağlayanlar (%11,13 Ağırlık)">
+                        <option value="02.1_G">02.1: Makine ve Diğer Teçhizat (Traktör, Mibzer)</option>
                       </optgroup>
                     </select>
                   </div>
@@ -656,6 +667,93 @@ export const Home: React.FC = () => {
                           </div>
                         </div>
                       ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* TÜİK Resmî Tarım-GFE (2020=100) Ağırlık Şeması & Bileşik Endeks Paneli */}
+                {(queryType === 'girdi' || queryType === 'hepsi') && (
+                  <div className="mt-4 pt-4 border-t border-[#F0EDE4] bg-[#FBF9F4] rounded-xl p-4 border border-[#BDC8A3]/70">
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-3">
+                      <div>
+                        <div className="flex items-center gap-2">
+                          <span className="w-2.5 h-2.5 rounded-full bg-[#C47A3A]" />
+                          <h4 className="text-xs sm:text-sm font-bold text-[#1C2418]">
+                            TÜİK 2020=100 Tarım-GFE Resmî Ağırlık Şeması ve Bileşik Endeks
+                          </h4>
+                          <span className="atlas-badge atlas-badge-copper text-[10px] font-bold">
+                            Resmî Metodoloji
+                          </span>
+                        </div>
+                        <p className="text-[11px] text-[#6B7260] mt-0.5">
+                          Tarımsal Yapı İstatistikleri Grup Başkanlığı 3 yıllık (2019-2021) ekonomik hesaplar ara tüketim ve yatırım ağırlıkları.
+                        </p>
+                      </div>
+
+                      <div className="flex items-center gap-1.5 text-[11px] bg-white px-2.5 py-1 rounded-lg border border-[#D8D2C2] text-[#1C2418]">
+                        <Calendar className="w-3.5 h-3.5 text-[#5B6B32]" />
+                        <span>Fiyat Kapsamı: <strong>Ayın 1'i - 31'i Arası Çiftçi Satın Alma</strong></span>
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                      {/* Girdi 1: Tarımda Kullanılan Mal ve Hizmetler */}
+                      <div className="bg-white p-3 rounded-xl border border-[#D8D2C2] shadow-2xs">
+                        <div className="flex items-center justify-between text-[11px] mb-1">
+                          <span className="font-bold text-[#5B6B32]">Girdi 1: Ara Tüketim</span>
+                          <span className="px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-[#EFF2E6] text-[#5B6B32] border border-[#BDC8A3]">
+                            %88,87 Ağırlık
+                          </span>
+                        </div>
+                        <div className="text-xl font-extrabold text-[#1C2418] tabular-numbers">
+                          {tgfeComposite.girdi1Endeksi.toLocaleString('tr-TR', { minimumFractionDigits: 1, maximumFractionDigits: 1 })}
+                          <span className="text-xs font-normal text-[#6B7260] ml-1">p</span>
+                        </div>
+                        <div className="text-[10px] text-[#6B7260] mt-1 leading-snug">
+                          Tohum, gübre, hayvan yemi, ilaç, fide vb. ({tgfeComposite.girdi1KalemSayisi} kalem)
+                        </div>
+                      </div>
+
+                      {/* Girdi 2: Tarımsal Yatırıma Katkı Sağlayan Mal ve Hizmetler */}
+                      <div className="bg-white p-3 rounded-xl border border-[#D8D2C2] shadow-2xs">
+                        <div className="flex items-center justify-between text-[11px] mb-1">
+                          <span className="font-bold text-[#C47A3A]">Girdi 2: Yatırım Katkısı</span>
+                          <span className="px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-[#FBF1E6] text-[#C47A3A] border border-[#F0D5BE]">
+                            %11,13 Ağırlık
+                          </span>
+                        </div>
+                        <div className="text-xl font-extrabold text-[#1C2418] tabular-numbers">
+                          {tgfeComposite.girdi2Endeksi.toLocaleString('tr-TR', { minimumFractionDigits: 1, maximumFractionDigits: 1 })}
+                          <span className="text-xs font-normal text-[#6B7260] ml-1">p</span>
+                        </div>
+                        <div className="text-[10px] text-[#6B7260] mt-1 leading-snug">
+                          Traktör, alet-makine vb. sermaye ({tgfeComposite.girdi2KalemSayisi} kalem)
+                        </div>
+                      </div>
+
+                      {/* Bileşik Genel Tarım-GFE Endeksi */}
+                      <div className="bg-[#1C2418] text-white p-3 rounded-xl shadow-sm flex flex-col justify-between">
+                        <div>
+                          <div className="flex items-center justify-between text-[11px] mb-1">
+                            <span className="font-bold text-[#D8D2C2]">Genel Tarım-GFE (Bileşik)</span>
+                            <span className="text-[9px] font-mono px-1.5 py-0.5 rounded bg-white/20 text-white">
+                              2020=100
+                            </span>
+                          </div>
+                          <div className="text-2xl font-black text-amber-300 tabular-numbers">
+                            {tgfeComposite.genelTGFEEndeksi.toLocaleString('tr-TR', { minimumFractionDigits: 1, maximumFractionDigits: 1 })}
+                            <span className="text-xs font-normal text-white/70 ml-1">puan</span>
+                          </div>
+                        </div>
+                        <div className="text-[9.5px] text-[#A6AC9A] mt-1">
+                          Formül: (0.8887 × I_Girdi1) + (0.1113 × I_Girdi2)
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="mt-2.5 pt-2 border-t border-[#D8D2C2]/50 text-[10px] text-[#6B7260] flex flex-wrap items-center justify-between gap-2">
+                      <span>📌 <strong>Cari Ağırlık Dönemi:</strong> 2019, 2020 ve 2021 yılları (t-1, t, t+1) 3 yıllık hareketli baz.</span>
+                      <span>🏛️ <strong>Sorumlu Birim:</strong> {TUIK_TGFE_METHODOLOGY.kaynakBaskanlik} (MEDAS kn=82 & kn=104)</span>
                     </div>
                   </div>
                 )}
