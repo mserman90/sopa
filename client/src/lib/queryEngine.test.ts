@@ -199,4 +199,50 @@ describe('TarımViz Akıllı Sorgulama ve Endeks Hesaplama Motoru Doğrulaması'
     );
   });
 
+  it('11. TÜİK 4 Ayaklı Veri Kaynakları Mimarisi (Soru Formu, TÜİK Diğer, İdari Kayıt, Veri Kazıma) eksiksiz tanımlanmalıdır', async () => {
+    const { TUIK_TGFE_METHODOLOGY } = await import('./queryEngine.ts');
+    
+    // 1. Dört kanalın varlığı ve başlıkları
+    expect(TUIK_TGFE_METHODOLOGY.veriKaynaklari).toBeDefined();
+    expect(TUIK_TGFE_METHODOLOGY.veriKaynaklari.soruFormlari.kaynaklar).toContain('Tarımsal Girdi İstatistikleri Aylık Soru Formu');
+    expect(TUIK_TGFE_METHODOLOGY.veriKaynaklari.soruFormlari.kaynaklar).toContain('Tarımsal Fiyatlar Çiftçinin Ödediği Hizmetler Fiyat Derleme Formu');
+    expect(TUIK_TGFE_METHODOLOGY.veriKaynaklari.tuikDigerCalismalar.kaynaklar).toContain('İnşaat Maliyet Endeksi (İME)');
+    expect(TUIK_TGFE_METHODOLOGY.veriKaynaklari.idariKayitlar.kaynaklar).toContain('TOB Devlet Su İşleri Genel Müdürlüğü');
+    expect(TUIK_TGFE_METHODOLOGY.veriKaynaklari.idariKayitlar.kaynaklar).toContain('Enerji Piyasası Düzenleme Kurulu (EPDK)');
+    expect(TUIK_TGFE_METHODOLOGY.veriKaynaklari.idariKayitlar.kaynaklar).toContain('Türkiye Tarım Kredi Kooperatifleri');
+    expect(TUIK_TGFE_METHODOLOGY.veriKaynaklari.idariKayitlar.kaynaklar).toContain('Pancar Ekicileri Kooperatifleri Birliği (PANKOBİRLİK)');
+    expect(TUIK_TGFE_METHODOLOGY.veriKaynaklari.idariKayitlar.kaynaklar).toContain('Türk Veteriner Hekimleri Birliği');
+    expect(TUIK_TGFE_METHODOLOGY.veriKaynaklari.veriKazima.kaynaklar).toContain('Traktör ve Makine Satışı Yapan Bayiler');
+
+    // 2. Girdi sorgusundaki kalemlerin 4 kanala dağılımı
+    const results = executeAgriQuery({ il: 'Konya', tur: 'girdi', yil: 2026, ay: 10 });
+
+    // Soru formu örneği (Üre Gübresi / Yem)
+    const soruFormuItem = results.find(r => r.tuikVeriKaynagi?.kanalKodu === 'soru_formlari');
+    expect(soruFormuItem).toBeDefined();
+
+    // İdari Kayıt örneği (Sulama Suyu / EPDK Motorin / Tarımsal Elektrik / TVHB)
+    const dsiItem = results.find(r => r.urunAdi.includes('Sulama Suyu'));
+    expect(dsiItem?.tuikVeriKaynagi?.kanalKodu).toBe('idari_kayitlar');
+    expect(dsiItem?.tuikVeriKaynagi?.kurumVeDokuman).toContain('Devlet Su İşleri');
+
+    const epdkItem = results.find(r => r.urunAdi.includes('Elektrik Enerjisi'));
+    expect(epdkItem?.tuikVeriKaynagi?.kanalKodu).toBe('idari_kayitlar');
+    expect(epdkItem?.tuikVeriKaynagi?.kurumVeDokuman).toContain('EPDK');
+
+    const veterinerItem = results.find(r => r.urunAdi.includes('Veterinerlik'));
+    expect(veterinerItem?.tuikVeriKaynagi?.kanalKodu).toBe('idari_kayitlar');
+    expect(veterinerItem?.tuikVeriKaynagi?.kurumVeDokuman).toContain('Türk Veteriner Hekimleri Birliği');
+
+    // TÜİK Diğer Çalışmalar örneği (İME Sera Yapı)
+    const imeItem = results.find(r => r.urunAdi.includes('Sera Bakım'));
+    expect(imeItem?.tuikVeriKaynagi?.kanalKodu).toBe('tuik_diger_calismalar');
+    expect(imeItem?.tuikVeriKaynagi?.kurumVeDokuman).toContain('İnşaat Maliyet Endeksi');
+
+    // Veri Kazıma örneği (Traktör / Mibzer)
+    const traktorItem = results.find(r => r.urunAdi.includes('Traktör'));
+    expect(traktorItem?.tuikVeriKaynagi?.kanalKodu).toBe('veri_kazima');
+    expect(traktorItem?.tuikVeriKaynagi?.kurumVeDokuman).toContain('Traktör ve Makine Satışı Yapan Bayiler');
+  });
+
 });

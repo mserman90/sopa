@@ -327,6 +327,15 @@ export function getSeasonalityFactor(productName: string, month: number): number
 // 3. EN ALT KIRILIM ANA KATALOG (TAORBA 2008_2 & CPA 2008 & AB 2020 SINIFLAMA)
 // ============================================================================
 
+export type TuikDataChannelKey = 'soru_formlari' | 'tuik_diger_calismalar' | 'idari_kayitlar' | 'veri_kazima';
+
+export interface TuikVeriKaynagiDetay {
+  kanalKodu: TuikDataChannelKey;
+  kanalAdi: string;
+  kurumVeDokuman: string;
+  aciklama: string;
+}
+
 export interface MasterCatalogItem {
   id: string;
   kod: string;
@@ -363,6 +372,9 @@ export interface MasterCatalogItem {
   tobbBorsaKodu?: string;
   hksUrunKodu?: string;
   oncelikliIller?: string[];
+
+  // TÜİK Resmî 4 Ayaklı Veri Kaynağı Sınıflaması
+  tuikVeriKaynagi?: TuikVeriKaynagiDetay;
 }
 
 export const MASTER_AGRI_CATALOG: MasterCatalogItem[] = [
@@ -972,7 +984,7 @@ export const MASTER_AGRI_CATALOG: MasterCatalogItem[] = [
     sektor: 'bitkisel',
     abElKitabi2020: {
       anaGrupKod: '01',
-      anaGrupAdi: '01: Tarımda Fiilen Tüketilen Mal ve Hizmetler (Ara Tüketim)',
+      anaGrupAdi: 'Girdi 1: Tarımda Kullanılan Mal ve Hizmetler (Ara Tüketim - %88,87)',
       altGrupKod: '01.3_G',
       altGrupAdi: '01.3: Gübreler ve Toprak Geliştiriciler (Fertilisers and soil improvers)'
     },
@@ -989,6 +1001,12 @@ export const MASTER_AGRI_CATALOG: MasterCatalogItem[] = [
     endeksTuru: 'Tarım-GFE',
     ulusalTabanFiyat: 14800.00,
     birincilKaynak: 'TÜİK TGFE + Gübretaş / Toros Bayi Ortalaması',
+    tuikVeriKaynagi: {
+      kanalKodu: 'soru_formlari',
+      kanalAdi: '1. Soru Formları',
+      kurumVeDokuman: 'Tarımsal Girdi İstatistikleri Aylık Soru Formu & Türkiye Tarım Kredi Kooperatifleri',
+      aciklama: 'Aylık girdi bayileri soru formu ve Tarım Kredi Kooperatifleri tescil satış fiyatları'
+    },
     oncelikliIller: ['Konya', 'Adana', 'Şanlıurfa', 'Tekirdağ', 'Manisa']
   },
   {
@@ -998,7 +1016,7 @@ export const MASTER_AGRI_CATALOG: MasterCatalogItem[] = [
     sektor: 'bitkisel',
     abElKitabi2020: {
       anaGrupKod: '01',
-      anaGrupAdi: '01: Tarımda Fiilen Tüketilen Mal ve Hizmetler (Ara Tüketim)',
+      anaGrupAdi: 'Girdi 1: Tarımda Kullanılan Mal ve Hizmetler (Ara Tüketim - %88,87)',
       altGrupKod: '01.3_G',
       altGrupAdi: '01.3: Gübreler ve Toprak Geliştiriciler (Fertilisers and soil improvers)'
     },
@@ -1015,6 +1033,12 @@ export const MASTER_AGRI_CATALOG: MasterCatalogItem[] = [
     endeksTuru: 'Tarım-GFE',
     ulusalTabanFiyat: 21500.00,
     birincilKaynak: 'TÜİK TGFE + Gübre Distribütör Fiyatları',
+    tuikVeriKaynagi: {
+      kanalKodu: 'soru_formlari',
+      kanalAdi: '1. Soru Formları',
+      kurumVeDokuman: 'Tarımsal Girdi İstatistikleri Aylık Soru Formu & PANKOBİRLİK İdari Kayıtları',
+      aciklama: 'Kimyevi gübre bayileri soru formu ve Pancar Ekicileri Kooperatifleri Birliği tescil fiyatları'
+    },
     oncelikliIller: ['Konya', 'Edirne', 'Diyarbakır', 'Ankara', 'Aydın']
   },
   {
@@ -1024,7 +1048,7 @@ export const MASTER_AGRI_CATALOG: MasterCatalogItem[] = [
     sektor: 'hayvansal',
     abElKitabi2020: {
       anaGrupKod: '01',
-      anaGrupAdi: '01: Tarımda Fiilen Tüketilen Mal ve Hizmetler (Ara Tüketim)',
+      anaGrupAdi: 'Girdi 1: Tarımda Kullanılan Mal ve Hizmetler (Ara Tüketim - %88,87)',
       altGrupKod: '01.5_G',
       altGrupAdi: '01.5: Hayvan Yemleri (Animal feedingstuffs)'
     },
@@ -1041,6 +1065,12 @@ export const MASTER_AGRI_CATALOG: MasterCatalogItem[] = [
     endeksTuru: 'Tarım-GFE',
     ulusalTabanFiyat: 9.40,
     birincilKaynak: 'TÜİK TGFE + Türkiye Yem Sanayicileri Birliği (TÜRKİYEMBİR)',
+    tuikVeriKaynagi: {
+      kanalKodu: 'soru_formlari',
+      kanalAdi: '1. Soru Formları',
+      kurumVeDokuman: 'Tarımsal Girdi İstatistikleri Aylık Soru Formu & Türkiye Tarım Kredi Kooperatifleri',
+      aciklama: 'Yem bayileri aylık soru formu ve Tarım Kredi Kooperatifleri karma yem satış fiyatları'
+    },
     oncelikliIller: ['Konya', 'Balıkesir', 'Erzurum', 'Afyonkarahisar', 'Kars', 'Aksaray']
   },
   {
@@ -1050,7 +1080,7 @@ export const MASTER_AGRI_CATALOG: MasterCatalogItem[] = [
     sektor: 'hayvansal',
     abElKitabi2020: {
       anaGrupKod: '01',
-      anaGrupAdi: '01: Tarımda Fiilen Tüketilen Mal ve Hizmetler (Ara Tüketim)',
+      anaGrupAdi: 'Girdi 1: Tarımda Kullanılan Mal ve Hizmetler (Ara Tüketim - %88,87)',
       altGrupKod: '01.5_G',
       altGrupAdi: '01.5: Hayvan Yemleri (Animal feedingstuffs)'
     },
@@ -1067,6 +1097,12 @@ export const MASTER_AGRI_CATALOG: MasterCatalogItem[] = [
     endeksTuru: 'Tarım-GFE',
     ulusalTabanFiyat: 10.60,
     birincilKaynak: 'TÜİK TGFE + TÜRKİYEMBİR Fiyat Bülteni',
+    tuikVeriKaynagi: {
+      kanalKodu: 'soru_formlari',
+      kanalAdi: '1. Soru Formları',
+      kurumVeDokuman: 'Tarımsal Girdi İstatistikleri Aylık Soru Formu & TÜRKİYEMBİR',
+      aciklama: 'Karma yem sanayisi bayilerinden derlenen aylık soru formları'
+    },
     oncelikliIller: ['İzmir', 'Balıkesir', 'Bursa', 'Konya', 'Tekirdağ', 'Aydın']
   },
   {
@@ -1076,7 +1112,7 @@ export const MASTER_AGRI_CATALOG: MasterCatalogItem[] = [
     sektor: 'bitkisel',
     abElKitabi2020: {
       anaGrupKod: '01',
-      anaGrupAdi: '01: Tarımda Fiilen Tüketilen Mal ve Hizmetler (Ara Tüketim)',
+      anaGrupAdi: 'Girdi 1: Tarımda Kullanılan Mal ve Hizmetler (Ara Tüketim - %88,87)',
       altGrupKod: '01.2_G',
       altGrupAdi: '01.2: Enerji ve Yağlar (Energy and lubricants)'
     },
@@ -1093,7 +1129,45 @@ export const MASTER_AGRI_CATALOG: MasterCatalogItem[] = [
     endeksTuru: 'Tarım-GFE',
     ulusalTabanFiyat: 44.80,
     birincilKaynak: 'TÜİK TGFE + EPDK İl Bazlı Tavan/Akaryakıt Bülteni',
+    tuikVeriKaynagi: {
+      kanalKodu: 'idari_kayitlar',
+      kanalAdi: '3. İdari Kayıtlar',
+      kurumVeDokuman: 'Enerji Piyasası Düzenleme Kurulu (EPDK) İdari Kayıtları & Yİ-ÜFE',
+      aciklama: 'EPDK 81 il akaryakıt pompa tavan fiyat bültenleri ve Yİ-ÜFE rafineri endeksi'
+    },
     oncelikliIller: ['Konya', 'Adana', 'Şanlıurfa', 'Tekirdağ', 'Antalya']
+  },
+  {
+    id: 'girdi-elektrik-tarimsal',
+    kod: 'TGFE-E02',
+    tur: 'girdi',
+    sektor: 'bitkisel',
+    abElKitabi2020: {
+      anaGrupKod: '01',
+      anaGrupAdi: 'Girdi 1: Tarımda Kullanılan Mal ve Hizmetler (Ara Tüketim - %88,87)',
+      altGrupKod: '01.2_G',
+      altGrupAdi: '01.2: Enerji ve Yağlar (Tarımsal Elektrik)'
+    },
+    taorba2008_2: '35.14.10.00.00',
+    cpa2008: '35.14.10',
+    anaGrup: 'Enerji ve Yakıtlar',
+    altGrup: 'Elektrik Enerjisi',
+    urunAdi: 'Tarımsal Sulama Elektrik Enerjisi (Tarımsal Faaliyetler AG Tarifesi)',
+    spesifikasyon: 'Alçak gerilim tek terimli tarımsal sulama abone grubu kWh birim bedeli',
+    varsayilanBirim: 'kWh',
+    fiyatBirimi: 'TL/kWh',
+    bazYil2020Fiyat: 0.62,
+    endeksAgirligiPromil: 78.0,
+    endeksTuru: 'Tarım-GFE',
+    ulusalTabanFiyat: 3.45,
+    birincilKaynak: 'TÜİK TGFE + Enerji Piyasası Düzenleme Kurulu (EPDK) Tarifesi',
+    tuikVeriKaynagi: {
+      kanalKodu: 'idari_kayitlar',
+      kanalAdi: '3. İdari Kayıtlar',
+      kurumVeDokuman: 'Enerji Piyasası Düzenleme Kurulu (EPDK)',
+      aciklama: 'EPDK resmî elektrik tarifesi tablosu ve Yİ-ÜFE elektrik üretim ve dağıtım endeksi'
+    },
+    oncelikliIller: ['Konya', 'Şanlıurfa', 'Mardin', 'Diyarbakır', 'Adana', 'Manisa']
   },
   {
     id: 'girdi-hizmet-iscilik',
@@ -1102,7 +1176,7 @@ export const MASTER_AGRI_CATALOG: MasterCatalogItem[] = [
     sektor: 'bitkisel',
     abElKitabi2020: {
       anaGrupKod: '01',
-      anaGrupAdi: '01: Tarımda Fiilen Tüketilen Mal ve Hizmetler (Ara Tüketim)',
+      anaGrupAdi: 'Girdi 1: Tarımda Kullanılan Mal ve Hizmetler (Ara Tüketim - %88,87)',
       altGrupKod: '01.9_G',
       altGrupAdi: '01.9: Diğer Mal ve Hizmetler (Other goods and services)'
     },
@@ -1119,7 +1193,77 @@ export const MASTER_AGRI_CATALOG: MasterCatalogItem[] = [
     endeksTuru: 'Tarım-GFE',
     ulusalTabanFiyat: 850.00,
     birincilKaynak: 'TÜİK Tarımsal İş Gücü Ücret İstatistikleri',
+    tuikVeriKaynagi: {
+      kanalKodu: 'soru_formlari',
+      kanalAdi: '1. Soru Formları',
+      kurumVeDokuman: 'Tarımsal Fiyatlar Çiftçinin Ödediği Hizmetler Fiyat Derleme Formu',
+      aciklama: 'Çiftçilerin mevsimlik işçilik, çapa ve hasat için fiilen ödediği hizmet fiyatları soru formu'
+    },
     oncelikliIller: ['Adana', 'Mersin', 'Antalya', 'Giresun', 'Malatya', 'Şanlıurfa']
+  },
+  {
+    id: 'girdi-sulama-dsi',
+    kod: 'TGFE-S01',
+    tur: 'girdi',
+    sektor: 'bitkisel',
+    abElKitabi2020: {
+      anaGrupKod: '01',
+      anaGrupAdi: 'Girdi 1: Tarımda Kullanılan Mal ve Hizmetler (Ara Tüketim - %88,87)',
+      altGrupKod: '01.9_G',
+      altGrupAdi: '01.9: Diğer Mal ve Hizmetler (Sulama Suyu)'
+    },
+    taorba2008_2: '36.00.20.00.00',
+    cpa2008: '36.00.20',
+    anaGrup: 'Hizmetler (Kira, İşçilik vb.)',
+    altGrup: 'Sulama Ücretleri',
+    urunAdi: 'Tarımsal Sulama Suyu Tarifesi (Sulama Birlikleri Dekar Ücreti)',
+    spesifikasyon: 'Cazibe ve pompaj sulama sahaları, dekar başına sezonluk birlik işletme-bakım ücreti',
+    varsayilanBirim: 'Da',
+    fiyatBirimi: 'TL/Da',
+    bazYil2020Fiyat: 65.00,
+    endeksAgirligiPromil: 42.0,
+    endeksTuru: 'Tarım-GFE',
+    ulusalTabanFiyat: 480.00,
+    birincilKaynak: 'TÜİK TGFE + TOB Devlet Su İşleri Genel Müdürlüğü',
+    tuikVeriKaynagi: {
+      kanalKodu: 'idari_kayitlar',
+      kanalAdi: '3. İdari Kayıtlar',
+      kurumVeDokuman: 'TOB Devlet Su İşleri Genel Müdürlüğü',
+      aciklama: 'DSİ ve Sulama Birlikleri resmî sulama suyu işletme, bakım ve su kullanım hizmet bedeli tarifeleri'
+    },
+    oncelikliIller: ['Konya', 'Adana', 'Şanlıurfa', 'Aydın', 'İzmir', 'Edirne']
+  },
+  {
+    id: 'girdi-veteriner-hizmet',
+    kod: 'TGFE-V01',
+    tur: 'girdi',
+    sektor: 'hayvansal',
+    abElKitabi2020: {
+      anaGrupKod: '01',
+      anaGrupAdi: 'Girdi 1: Tarımda Kullanılan Mal ve Hizmetler (Ara Tüketim - %88,87)',
+      altGrupKod: '01.9_G',
+      altGrupAdi: '01.9: Diğer Mal ve Hizmetler (Veterinerlik Hizmetleri)'
+    },
+    taorba2008_2: '75.00.11.00.00',
+    cpa2008: '75.00.11',
+    anaGrup: 'Hizmetler (Kira, İşçilik vb.)',
+    altGrup: 'Veterinerlik Hizmetleri',
+    urunAdi: 'Veterinerlik ve Suni Tohumlama Hizmeti (Büyükbaş Muayene/Aşı/Uygulama)',
+    spesifikasyon: 'Büyükbaş rektal muayene, brucella/şap aşılama ve dondurulmuş sperma ile suni tohumlama',
+    varsayilanBirim: 'İşlem',
+    fiyatBirimi: 'TL/İşlem',
+    bazYil2020Fiyat: 140.00,
+    endeksAgirligiPromil: 38.0,
+    endeksTuru: 'Tarım-GFE',
+    ulusalTabanFiyat: 1100.00,
+    birincilKaynak: 'TÜİK TGFE + Türk Veteriner Hekimleri Birliği Asgari Ücret Tarifesi',
+    tuikVeriKaynagi: {
+      kanalKodu: 'idari_kayitlar',
+      kanalAdi: '3. İdari Kayıtlar',
+      kurumVeDokuman: 'Türk Veteriner Hekimleri Birliği',
+      aciklama: 'Türk Veteriner Hekimleri Birliği il odaları asgari ücret tarifeleri ve H-ÜFE veterinerlik serisi'
+    },
+    oncelikliIller: ['Balıkesir', 'İzmir', 'Konya', 'Kars', 'Erzurum', 'Afyonkarahisar']
   },
   {
     id: 'girdi-ilac-herbisit',
@@ -1145,6 +1289,12 @@ export const MASTER_AGRI_CATALOG: MasterCatalogItem[] = [
     endeksTuru: 'Tarım-GFE',
     ulusalTabanFiyat: 720.00,
     birincilKaynak: 'TÜİK TGFE + T.C. Tarım ve Orman Bakanlığı İlaç Bayi Fiyatları',
+    tuikVeriKaynagi: {
+      kanalKodu: 'soru_formlari',
+      kanalAdi: '1. Soru Formları',
+      kurumVeDokuman: 'Tarımsal Girdi İstatistikleri Aylık Soru Formu & Türkiye Tarım Kredi Kooperatifleri',
+      aciklama: 'Bitki koruma ürünleri bayileri aylık soru formu ve kooperatif satış fiyatları'
+    },
     oncelikliIller: ['Konya', 'Adana', 'Tekirdağ', 'Şanlıurfa', 'Ankara']
   },
   {
@@ -1171,6 +1321,12 @@ export const MASTER_AGRI_CATALOG: MasterCatalogItem[] = [
     endeksTuru: 'Tarım-GFE',
     ulusalTabanFiyat: 19.50,
     birincilKaynak: 'TÜİK TGFE + TİGEM Sertifikalı Tohum Satış Fiyatı',
+    tuikVeriKaynagi: {
+      kanalKodu: 'soru_formlari',
+      kanalAdi: '1. Soru Formları',
+      kurumVeDokuman: 'Tarımsal Girdi İstatistikleri Aylık Soru Formu & PANKOBİRLİK',
+      aciklama: 'Sertifikalı tohum bayileri soru formu ve Pancar Kooperatifleri Birliği tohum fiyatları'
+    },
     oncelikliIller: ['Konya', 'Eskişehir', 'Ankara', 'Tekirdağ', 'Diyarbakır']
   },
 
@@ -1201,6 +1357,12 @@ export const MASTER_AGRI_CATALOG: MasterCatalogItem[] = [
     endeksTuru: 'Tarım-GFE',
     ulusalTabanFiyat: 1650000.00,
     birincilKaynak: 'TÜİK TGFE + TARMAKBİR Bayi Liste Fiyatları',
+    tuikVeriKaynagi: {
+      kanalKodu: 'veri_kazima',
+      kanalAdi: '4. Veri Kazıma',
+      kurumVeDokuman: 'Traktör ve Makine Satışı Yapan Bayiler',
+      aciklama: 'Traktör yetkili satıcıları ve bayilerinin internet sitelerinden web kazıma (web scraping) ile derlenen liste fiyatları'
+    },
     oncelikliIller: ['Konya', 'Adana', 'Manisa', 'Balıkesir', 'Ankara', 'Bursa']
   },
   {
@@ -1227,7 +1389,45 @@ export const MASTER_AGRI_CATALOG: MasterCatalogItem[] = [
     endeksTuru: 'Tarım-GFE',
     ulusalTabanFiyat: 340000.00,
     birincilKaynak: 'TÜİK TGFE + Zirai Alet ve Ekipman Üreticileri Bülteni',
+    tuikVeriKaynagi: {
+      kanalKodu: 'veri_kazima',
+      kanalAdi: '4. Veri Kazıma',
+      kurumVeDokuman: 'Traktör ve Makine Satışı Yapan Bayiler',
+      aciklama: 'Zirai ekim ve toprak işleme makinesi satıcılarının online katalog ve bayi portallarından veri kazıma'
+    },
     oncelikliIller: ['Konya', 'Edirne', 'Adana', 'Tekirdağ', 'Eskişehir']
+  },
+  {
+    id: 'girdi-yapi-sera',
+    kod: 'TGFE-YAT03',
+    tur: 'girdi',
+    sektor: 'bitkisel',
+    abElKitabi2020: {
+      anaGrupKod: '02',
+      anaGrupAdi: 'Girdi 2: Tarımsal Yatırıma Katkı Sağlayan Mal ve Hizmetler (Yatırım - %11,13)',
+      altGrupKod: '02.1_G',
+      altGrupAdi: '02.1: Makine ve Ekipman (Tarımsal Yapılar)'
+    },
+    taorba2008_2: '41.00.40.00.00',
+    cpa2008: '41.00.40',
+    anaGrup: 'Tarımsal Yatırım ve Makineler',
+    altGrup: 'Tarımsal Yapılar ve Binalar',
+    urunAdi: 'Tarımsal Yapı ve Sera Bakım / Çelik Profil ve Konstrüksiyon',
+    spesifikasyon: 'Galvanizli sera iskelet borusu, bağlantı elemanları ve çatı örtü taşıyıcı çelik profili',
+    varsayilanBirim: 'Kg',
+    fiyatBirimi: 'TL/Kg',
+    bazYil2020Fiyat: 5.80,
+    endeksAgirligiPromil: 24.5,
+    endeksTuru: 'Tarım-GFE',
+    ulusalTabanFiyat: 48.00,
+    birincilKaynak: 'TÜİK İnşaat Maliyet Endeksi (İME) + Yİ-ÜFE',
+    tuikVeriKaynagi: {
+      kanalKodu: 'tuik_diger_calismalar',
+      kanalAdi: '2. TÜİK Tarafından Yapılan Diğer Çalışmalar',
+      kurumVeDokuman: 'İnşaat Maliyet Endeksi (İME) & Yurt İçi Üretici Fiyat Endeksi (Yİ-ÜFE)',
+      aciklama: 'TÜİK İnşaat Maliyet Endeksi (İME) bina yapımı metal/çelik girdi serileri ve Yİ-ÜFE metal sanayi endeksi'
+    },
+    oncelikliIller: ['Antalya', 'Mersin', 'Muğla', 'İzmir', 'Aydın', 'Adana']
   }
 ];
 
@@ -1255,7 +1455,51 @@ export const TUIK_TGFE_METHODOLOGY = {
   },
   fiyatKapsami: "Endeksin fiyat kapsamı, çiftçinin ilgili ayın 1'i ile 31'i arasında tarımsal faaliyetlerinde kullanmak üzere veya tarımsal yatırıma katkı sağlamak amacıyla satın aldığı ürünlerin ve hizmetlerin fiyatlarıdır.",
   cariAgirlikDonemi: 'Temel yıldan bir önceki yıl (2019), temel yıl (2020) ve temel yıldan bir sonrası yıl (2021) 3 yıllık ekonomik hesaplar çalışması ortalaması.',
-  kaynakBaskanlik: 'Tarım İstatistikleri Daire Başkanlığı & Tarımsal Yapı İstatistikleri Grup Başkanlığı'
+  kaynakBaskanlik: 'Tarım İstatistikleri Daire Başkanlığı & Tarımsal Yapı İstatistikleri Grup Başkanlığı',
+
+  // TÜİK Resmî 4 Ayaklı Veri Kaynakları Sınıflaması
+  veriKaynaklari: {
+    soruFormlari: {
+      kod: 'soru_formlari',
+      baslik: '1. Soru Formları',
+      kaynaklar: [
+        'Tarımsal Girdi İstatistikleri Aylık Soru Formu',
+        'Tarımsal Fiyatlar Çiftçinin Ödediği Hizmetler Fiyat Derleme Formu'
+      ],
+      aciklama: 'Tarımsal girdi satan bayilerden (gübre, yem, tohum, zirai ilaç) ve tarımsal hizmet (işçilik, biçerdöver, sürüm vb.) sunucularından doğrudan derlenen aylık soru formları.'
+    },
+    tuikDigerCalismalar: {
+      kod: 'tuik_diger_calismalar',
+      baslik: '2. TÜİK Tarafından Yapılan Diğer Çalışmalar',
+      kaynaklar: [
+        'Tüketici Fiyat Endeksi (TÜFE)',
+        'Yurt İçi Üretici Fiyat Endeksi (Yİ-ÜFE)',
+        'Hizmet Üretici Fiyat Endeksi (H-ÜFE)',
+        'İnşaat Maliyet Endeksi (İME)'
+      ],
+      aciklama: 'TÜİK bünyesinde üretilen sanayi, inşaat ve hizmet endekslerinden tarımsal girdi kapsamına aktarılan endeks ve alt madde fiyat serileri.'
+    },
+    idariKayitlar: {
+      kod: 'idari_kayitlar',
+      baslik: '3. İdari Kayıtlar',
+      kaynaklar: [
+        'TOB Devlet Su İşleri Genel Müdürlüğü',
+        'Enerji Piyasası Düzenleme Kurulu (EPDK)',
+        'Türkiye Tarım Kredi Kooperatifleri',
+        'Pancar Ekicileri Kooperatifleri Birliği (PANKOBİRLİK)',
+        'Türk Veteriner Hekimleri Birliği'
+      ],
+      aciklama: 'Kamu kurumları, düzenleyici kurullar ve tarımsal kooperatif/birliklerin yayımladığı resmî tarife ve tescil kayıtları.'
+    },
+    veriKazima: {
+      kod: 'veri_kazima',
+      baslik: '4. Veri Kazıma (Web Scraping)',
+      kaynaklar: [
+        'Traktör ve Makine Satışı Yapan Bayiler'
+      ],
+      aciklama: 'Yetkili distribütör ve bayi ağlarının web sitelerinden web kazıma yoluyla derlenen fiili traktör, mibzer ve zirai makine satış fiyatları.'
+    }
+  }
 };
 
 /**
@@ -1441,6 +1685,9 @@ export interface QueryResultItem {
   fallbackAciklamasi: string;
   kaynakca: string;
   erisimTarihi: string;
+
+  // TÜİK Resmî 4 Ayaklı Veri Kaynağı
+  tuikVeriKaynagi?: TuikVeriKaynagiDetay;
 }
 
 // ============================================================================
@@ -1569,7 +1816,8 @@ export function executeAgriQuery(params: {
       fallbackSeviyesi,
       fallbackAciklamasi,
       kaynakca,
-      erisimTarihi: nowStr
+      erisimTarihi: nowStr,
+      tuikVeriKaynagi: item.tuikVeriKaynagi
     };
   });
 }

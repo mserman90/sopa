@@ -751,6 +751,75 @@ export const Home: React.FC = () => {
                       </div>
                     </div>
 
+                    {/* TÜİK Tarım-GFE 4 Ayaklı Resmî Veri Kaynakları Mimarisi */}
+                    <div className="mt-3.5 pt-3 border-t border-[#D8D2C2]/60">
+                      <div className="text-[11px] font-bold text-[#1C2418] uppercase tracking-wider mb-2 flex items-center justify-between">
+                        <span className="flex items-center gap-1.5">
+                          <Database className="w-3.5 h-3.5 text-[#5B6B32]" />
+                          TÜİK Tarım-GFE Resmî Veri Kaynakları Mimarisi (4 Temel Kanal)
+                        </span>
+                        <span className="text-[10px] text-[#6B7260] font-normal normal-case hidden sm:inline">
+                          Soru Formları • TÜİK Diğer Çalışmaları • İdari Kayıtlar • Veri Kazıma
+                        </span>
+                      </div>
+                      
+                      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2.5">
+                        {/* 1. Soru Formları */}
+                        <div className="bg-white p-2.5 rounded-lg border border-[#D8D2C2] hover:border-[#5B6B32] transition-colors">
+                          <div className="flex items-center gap-1.5 text-[11px] font-bold text-[#5B6B32] mb-1">
+                            <FileText className="w-3.5 h-3.5 text-[#5B6B32]" />
+                            <span>1. Soru Formları</span>
+                          </div>
+                          <ul className="text-[10px] text-[#6B7260] space-y-0.5 list-disc pl-3 leading-tight">
+                            <li>Tarımsal Girdi İstatistikleri Aylık Soru Formu</li>
+                            <li>Tarımsal Fiyatlar Çiftçinin Ödediği Hizmetler Formu</li>
+                          </ul>
+                          <span className="text-[9px] text-[#A6AC9A] block mt-1">Gübre, yem, tohum, zirai ilaç & işçilik</span>
+                        </div>
+
+                        {/* 2. TÜİK Tarafından Yapılan Diğer Çalışmalar */}
+                        <div className="bg-white p-2.5 rounded-lg border border-[#D8D2C2] hover:border-[#C47A3A] transition-colors">
+                          <div className="flex items-center gap-1.5 text-[11px] font-bold text-[#C47A3A] mb-1">
+                            <TrendingUp className="w-3.5 h-3.5 text-[#C47A3A]" />
+                            <span>2. TÜİK Diğer Çalışmaları</span>
+                          </div>
+                          <ul className="text-[10px] text-[#6B7260] space-y-0.5 list-disc pl-3 leading-tight">
+                            <li>TÜFE & Yurt İçi ÜFE (Yİ-ÜFE)</li>
+                            <li>Hizmet ÜFE (H-ÜFE) & İnşaat Maliyet Endeksi (İME)</li>
+                          </ul>
+                          <span className="text-[9px] text-[#A6AC9A] block mt-1">Elektrik, sera demir-çelik, bakım malzemeleri</span>
+                        </div>
+
+                        {/* 3. İdari Kayıtlar */}
+                        <div className="bg-white p-2.5 rounded-lg border border-[#D8D2C2] hover:border-emerald-600 transition-colors">
+                          <div className="flex items-center gap-1.5 text-[11px] font-bold text-emerald-700 mb-1">
+                            <Building2 className="w-3.5 h-3.5 text-emerald-600" />
+                            <span>3. İdari Kayıtlar</span>
+                          </div>
+                          <ul className="text-[10px] text-[#6B7260] space-y-0.5 list-disc pl-3 leading-tight">
+                            <li>TOB Devlet Su İşleri Genel Müdürlüğü (DSİ)</li>
+                            <li>Enerji Piyasası Düzenleme Kurulu (EPDK)</li>
+                            <li>Tarım Kredi Koop. & PANKOBİRLİK</li>
+                            <li>Türk Veteriner Hekimleri Birliği</li>
+                          </ul>
+                          <span className="text-[9px] text-[#A6AC9A] block mt-1">Sulama suyu tarifesi, motorin, kooperatif fiyatları</span>
+                        </div>
+
+                        {/* 4. Veri Kazıma */}
+                        <div className="bg-white p-2.5 rounded-lg border border-[#D8D2C2] hover:border-sky-600 transition-colors">
+                          <div className="flex items-center gap-1.5 text-[11px] font-bold text-sky-700 mb-1">
+                            <Search className="w-3.5 h-3.5 text-sky-600" />
+                            <span>4. Veri Kazıma (Web Scraping)</span>
+                          </div>
+                          <ul className="text-[10px] text-[#6B7260] space-y-0.5 list-disc pl-3 leading-tight">
+                            <li>Traktör ve Makine Satışı Yapan Bayiler</li>
+                            <li>Yetkili distribütör liste fiyatları</li>
+                          </ul>
+                          <span className="text-[9px] text-[#A6AC9A] block mt-1">Sermaye/Yatırım malları (Traktör, mibzer vb.)</span>
+                        </div>
+                      </div>
+                    </div>
+
                     <div className="mt-2.5 pt-2 border-t border-[#D8D2C2]/50 text-[10px] text-[#6B7260] flex flex-wrap items-center justify-between gap-2">
                       <span>📌 <strong>Cari Ağırlık Dönemi:</strong> 2019, 2020 ve 2021 yılları (t-1, t, t+1) 3 yıllık hareketli baz.</span>
                       <span>🏛️ <strong>Sorumlu Birim:</strong> {TUIK_TGFE_METHODOLOGY.kaynakBaskanlik} (MEDAS kn=82 & kn=104)</span>
@@ -829,10 +898,42 @@ export const Home: React.FC = () => {
                             </span>
                           </td>
 
-                          {/* Ürün Adı */}
-                          <td className="px-4 py-3 font-bold text-[#1C2418] min-w-[180px]">
+                          {/* Ürün Adı & TÜİK Resmî Veri Kaynağı */}
+                          <td className="px-4 py-3 font-bold text-[#1C2418] min-w-[200px]">
                             <div>{item.urunAdi}</div>
-                            <span className="text-[10px] text-[#6B7260] font-normal">{item.anaGrup} • {item.altGrup}</span>
+                            <div className="text-[10px] text-[#6B7260] font-normal">{item.anaGrup} • {item.altGrup}</div>
+                            
+                            {/* TÜİK 4 Ayaklı Veri Kaynağı Rozeti */}
+                            {item.tuikVeriKaynagi ? (
+                              <div className="mt-1 flex items-center gap-1.5 flex-wrap">
+                                <span className={`inline-flex items-center px-1.5 py-0.5 rounded text-[9px] font-extrabold border ${
+                                  item.tuikVeriKaynagi.kanalKodu === 'soru_formlari'
+                                    ? 'bg-blue-50 text-blue-800 border-blue-200'
+                                    : item.tuikVeriKaynagi.kanalKodu === 'tuik_diger_calismalar'
+                                    ? 'bg-purple-50 text-purple-800 border-purple-200'
+                                    : item.tuikVeriKaynagi.kanalKodu === 'idari_kayitlar'
+                                    ? 'bg-emerald-50 text-emerald-800 border-emerald-200'
+                                    : 'bg-amber-50 text-amber-800 border-amber-200'
+                                }`} title={`${item.tuikVeriKaynagi.kurumVeDokuman}: ${item.tuikVeriKaynagi.aciklama}`}>
+                                  {item.tuikVeriKaynagi.kanalKodu === 'soru_formlari' && '📝 Soru Formu'}
+                                  {item.tuikVeriKaynagi.kanalKodu === 'tuik_diger_calismalar' && '📊 TÜİK Diğer Endeks'}
+                                  {item.tuikVeriKaynagi.kanalKodu === 'idari_kayitlar' && '🏢 İdari Kayıt'}
+                                  {item.tuikVeriKaynagi.kanalKodu === 'veri_kazima' && '🤖 Veri Kazıma'}
+                                </span>
+                                <span className="text-[9px] text-[#6B7260] truncate max-w-[150px]" title={item.tuikVeriKaynagi.kurumVeDokuman}>
+                                  {item.tuikVeriKaynagi.kurumVeDokuman}
+                                </span>
+                              </div>
+                            ) : item.tur === 'cikti' ? (
+                              <div className="mt-1 flex items-center gap-1.5 flex-wrap">
+                                <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[9px] font-extrabold bg-[#EFF2E6] text-[#5B6B32] border border-[#BDC8A3]" title="TÜİK Çiftçinin Eline Geçen Fiyatlar & Borsa Tescil Bültenleri">
+                                  🌾 ÇEGF / Borsa
+                                </span>
+                                <span className="text-[9px] text-[#6B7260] truncate max-w-[150px]" title={item.birincilKaynak || item.kaynakCaprazKontrol.tuikKaynak}>
+                                  {item.birincilKaynak || item.kaynakCaprazKontrol.tuikKaynak}
+                                </span>
+                              </div>
+                            ) : null}
                           </td>
 
                           {/* Madde Kodları (TAORBA 2008_2 & CPA 2008) */}
