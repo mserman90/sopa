@@ -7,7 +7,8 @@ import {
   Upload, Download, FileText, AlertCircle, CheckCircle2, 
   HelpCircle, ChevronRight, Filter, RefreshCw, Layers, Database,
   TrendingUp, Scale, Sprout, Wheat, Building2, Search, ArrowRight,
-  ShieldCheck, Calendar, MapPin, ExternalLink, PlusCircle
+  ShieldCheck, Calendar, MapPin, ExternalLink, PlusCircle,
+  Zap, Key, Copy, Terminal, Code2, Check, Eye, EyeOff
 } from 'lucide-react';
 import { 
   TarimRecord, SektorType, parseAndValidateCSV, 
@@ -20,6 +21,20 @@ import {
   EU_HANDBOOK_2020_GROUPS, calculateGroupPriceIndices,
   TUIK_TGFE_METHODOLOGY, calculateCompositeTGFE
 } from '../lib/queryEngine.ts';
+import {
+  TUIK_SDMX_CONFIG,
+  PREDEFINED_AGRI_DATAFLOWS,
+  SdmxDataflowMeta,
+  TuikTokenResponse,
+  requestTuikAccessToken,
+  buildSdmxDataUrl,
+  buildSdmxDataflowUrl,
+  buildSdmxDsdUrl,
+  generateSdmxCurlCommand,
+  generateSdmxPowerShellCommand,
+  generateSdmxPythonScript,
+  parseSdmxCsvToTarimRecords
+} from '../lib/tuikSdmx.ts';
 
 const STORAGE_KEY = 'tarimviz_user_records_v1';
 
@@ -36,7 +51,32 @@ const TURKEY_CITIES = [
 
 export const Home: React.FC = () => {
   // Navigation
-  const [activeTab, setActiveTab] = useState<'query' | 'overview' | 'table' | 'sources'>('query');
+  const [activeTab, setActiveTab] = useState<'query' | 'overview' | 'table' | 'sources' | 'sdmx'>('query');
+
+  // TÜİK SDMX REST Web Servisi State'leri
+  const [sdmxApiKey, setSdmxApiKey] = useState<string>(() => {
+    try {
+      return localStorage.getItem('tarimviz_tuik_api_key') || '';
+    } catch {
+      return '';
+    }
+  });
+  const [showApiKey, setShowApiKey] = useState<boolean>(false);
+  const [sdmxToken, setSdmxToken] = useState<TuikTokenResponse | null>(null);
+  const [sdmxIsLoadingToken, setSdmxIsLoadingToken] = useState<boolean>(false);
+  const [sdmxTokenError, setSdmxTokenError] = useState<string | null>(null);
+
+  const [selectedDataflowId, setSelectedDataflowId] = useState<string>('DF_TARIM_GFE_2020');
+  const [customDataflowId, setCustomDataflowId] = useState<string>('');
+  const [sdmxSeriesKey, setSdmxSeriesKey] = useState<string>('');
+  const [sdmxStartPeriod, setSdmxStartPeriod] = useState<number>(2020);
+  const [sdmxEndPeriod, setSdmxEndPeriod] = useState<number>(2026);
+  const [sdmxFormat, setSdmxFormat] = useState<'SDMX-CSV' | 'JSON' | 'SDMX_2_1_STRUCTURED'>('SDMX-CSV');
+
+  const [sdmxRawResponse, setSdmxRawResponse] = useState<string>('');
+  const [sdmxIsLoadingQuery, setSdmxIsLoadingQuery] = useState<boolean>(false);
+  const [sdmxQueryError, setSdmxQueryError] = useState<string | null>(null);
+  const [sdmxCopiedKey, setSdmxCopiedKey] = useState<string | null>(null);
 
   // Akıllı Sorgulama Modülü State'leri
   const [queryCity, setQueryCity] = useState<string>('Konya');
@@ -99,6 +139,111 @@ export const Home: React.FC = () => {
   const showToast = (msg: string) => {
     setToastMessage(msg);
     setTimeout(() => setToastMessage(null), 3000);
+  };
+
+  // TÜİK API Key Kaydetme
+  const handleSaveApiKey = (key: string) => {
+    setSdmxApiKey(key);
+    try {
+      localStorage.setItem('tarimviz_tuik_api_key', key.trim());
+      showToast('TÜİK API Anahtarı tarayıcıya güvenle kaydedildi.');
+    } catch (e) {
+      console.error(e);
+    }
+  };
+
+  // TÜİK OpenID Connect Token Alma
+  const handleGetTuikToken = async () => {
+    if (!sdmxApiKey.trim()) {
+      setSdmxTokenError('Lütfen geçerli bir TÜİK API Anahtarı girin.');
+      return;
+    }
+    setSdmxIsLoadingToken(true);
+    setSdmxTokenError(null);
+    try {
+      handleSaveApiKey(sdmxApiKey);
+      const res = await requestTuikAccessToken(sdmxApiKey);
+      setSdmxToken(res);
+      showToast('TÜİK Bearer Token başarıyla alındı.');
+    } catch (err: any) {
+      setSdmxTokenError(err?.message || 'Token alma işlemi başarısız oldu.');
+    } finally {
+      setSdmxIsLoadingToken(false);
+    }
+  };
+
+  // Aktif Veri Akışı ID'si
+  const activeDataflowId = customDataflowId.trim() || selectedDataflowId;
+
+  // Hedef SDMX Veri URL'si
+  const currentSdmxDataUrl = useMemo(() => {
+    return buildSdmxDataUrl({
+      dataflowId: activeDataflowId,
+      seriesKey: sdmxSeriesKey.trim() || undefined,
+      startPeriod: sdmxStartPeriod,
+      endPeriod: sdmxEndPeriod,
+      format: sdmxFormat
+    });
+  }, [activeDataflowId, sdmxSeriesKey, sdmxStartPeriod, sdmxEndPeriod, sdmxFormat]);
+
+  // Canlı SDMX Sorgulama Çağrısı (Direct Fetch / CORS Fallback)
+  const handleRunSdmxLiveQuery = async () => {
+    if (!sdmxToken) {
+      setSdmxQueryError('Lütfen önce "Token Al" butonuna basarak geçerli bir Bearer Token edinin.');
+      return;
+    }
+    setSdmxIsLoadingQuery(true);
+    setSdmxQueryError(null);
+    try {
+      const response = await fetch(currentSdmxDataUrl, {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${sdmxToken.access_token}`
+        }
+      });
+      if (!response.ok) {
+        throw new Error(`TÜİK SDMX Servis Hatası (${response.status}): ${response.statusText}`);
+      }
+      const text = await response.text();
+      setSdmxRawResponse(text);
+      showToast('TÜİK SDMX yanıtı başarıyla alındı.');
+    } catch (err: any) {
+      setSdmxQueryError(
+        `${err.message || 'İstek başarısız oldu.'} Tarayıcı doğrudan nsiws.tuik.gov.tr servisini CORS nedeniyle engellemiş olabilir. ` +
+        `Aşağıdaki hazır cURL / PowerShell komutunu çalıştırıp dönen çıktıyı alt kutuya yapıştırabilirsiniz.`
+      );
+    } finally {
+      setSdmxIsLoadingQuery(false);
+    }
+  };
+
+  // SDMX-CSV Yanıtını Ayrıştırıp Analiz Tablosuna Ekleme
+  const handleParseSdmxResponseAndAddToAnalysis = () => {
+    if (!sdmxRawResponse.trim()) {
+      showToast('Ayrıştırılacak SDMX yanıtı bulunamadı.');
+      return;
+    }
+    const { records: parsedRecords, warnings } = parseSdmxCsvToTarimRecords(sdmxRawResponse, {
+      kaynak: `TÜİK SDMX (${activeDataflowId})`
+    });
+
+    if (parsedRecords.length === 0) {
+      alert('SDMX-CSV içeriğinden geçerli kayıt üretilemedi. ' + (warnings.join('\n') || ''));
+      return;
+    }
+
+    const updated = [...parsedRecords, ...records];
+    saveRecords(updated);
+    showToast(`${parsedRecords.length} SDMX kaydı analiz tablosuna aktarıldı.`);
+    setActiveTab('overview');
+  };
+
+  // Kopyalama Yardımcısı
+  const copySnippet = (text: string, key: string) => {
+    navigator.clipboard.writeText(text);
+    setSdmxCopiedKey(key);
+    setTimeout(() => setSdmxCopiedKey(null), 2000);
+    showToast('Panoya kopyalandı.');
   };
 
   // Sorgulama Motorunu Çalıştırma
@@ -380,6 +525,25 @@ export const Home: React.FC = () => {
               <Database className="w-5 h-5 shrink-0" />
               <span className="hidden md:inline">TÜİK Kaynakları</span>
             </button>
+
+            {/* 5. TÜİK Canlı SDMX REST API */}
+            <button
+              onClick={() => setActiveTab('sdmx')}
+              className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all ${
+                activeTab === 'sdmx' 
+                  ? 'bg-[#C47A3A] text-white shadow-sm font-bold' 
+                  : 'text-[#D8D2C2] hover:bg-white/5 hover:text-white'
+              }`}
+              title="TÜİK Resmî SDMX REST Servisi"
+            >
+              <Zap className="w-5 h-5 shrink-0 text-amber-300" />
+              <div className="hidden md:flex flex-1 justify-between items-center">
+                <span>Canlı SDMX API</span>
+                <span className="bg-amber-500/30 text-amber-200 text-[9px] px-1.5 py-0.5 rounded font-mono font-bold">
+                  REST
+                </span>
+              </div>
+            </button>
           </nav>
         </div>
 
@@ -408,6 +572,7 @@ export const Home: React.FC = () => {
                   {activeTab === 'overview' && '📊 Gelir, Maliyet ve Brüt Marj Analiz Panosu'}
                   {activeTab === 'table' && '📑 Detaylı Kayıt ve Hesaplama Çizelgesi'}
                   {activeTab === 'sources' && '📚 Resmî TÜİK & Borsa Kaynak Kataloğu'}
+                  {activeTab === 'sdmx' && '⚡ TÜİK Resmî SDMX REST Web Servisi & Canlı Veri Masası'}
                 </h2>
                 <div className="text-[11px] text-[#6B7260] flex items-center gap-2">
                   <span>Bölge: <strong>{selectedRegionInfo.bolgeAdi} ({selectedRegionInfo.kod})</strong></span>
@@ -439,6 +604,18 @@ export const Home: React.FC = () => {
               >
                 <ExternalLink className="w-3.5 h-3.5 text-[#5B6B32]" /> TÜİK BÜİ (kn=92)
               </a>
+
+              <button
+                onClick={() => setActiveTab('sdmx')}
+                className={`px-3 py-1.5 text-xs font-semibold rounded-lg transition-colors flex items-center gap-1.5 shadow-2xs ${
+                  activeTab === 'sdmx'
+                    ? 'bg-[#C47A3A] text-white'
+                    : 'text-[#C47A3A] bg-[#FBF1E6] hover:bg-[#F0D5BE] border border-[#F0D5BE]'
+                }`}
+                title="TÜİK Resmî SDMX REST Servisinden Canlı Veri Çek"
+              >
+                <Zap className="w-3.5 h-3.5" /> Canlı SDMX API
+              </button>
 
               <button
                 onClick={handleDownloadTemplate}
@@ -1280,6 +1457,419 @@ export const Home: React.FC = () => {
                   </div>
                 ))}
               </div>
+            </div>
+          )}
+
+          {/* ============================================================ */}
+          {/* TAB: TÜİK CANLI SDMX REST WEB SERVİSİ (SDMX TAB) */}
+          {/* ============================================================ */}
+          {activeTab === 'sdmx' && (
+            <div className="space-y-6 max-w-7xl mx-auto">
+              
+              {/* Başlık Kartı */}
+              <div className="atlas-card p-6 rounded-2xl border-l-4 border-l-[#C47A3A] bg-gradient-to-r from-white via-white to-[#FBF1E6]/40">
+                <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                  <div>
+                    <div className="flex items-center gap-2">
+                      <span className="w-2.5 h-2.5 rounded-full bg-[#C47A3A] animate-pulse" />
+                      <h3 className="text-lg font-bold text-[#1C2418]">
+                        TÜİK Resmî SDMX REST API & Canlı Entegrasyon Masası
+                      </h3>
+                      <span className="atlas-badge atlas-badge-copper text-[10px] font-mono">
+                        v1.5 SPEC
+                      </span>
+                    </div>
+                    <p className="text-xs text-[#6B7260] mt-1 max-w-3xl leading-relaxed">
+                      TÜİK SDMX Web Servis Dokümantasyonuna uygun olarak; OpenID Connect üzerinden SMS doğrulamalı API anahtarınızla token alın,
+                      Dataflow/DSD metaverilerini inceleyin ve canlı tarımsal zaman serilerini (SDMX-CSV / JSON) doğrudan analiz panosuna aktarın.
+                    </p>
+                  </div>
+
+                  <div className="flex items-center gap-2">
+                    <a
+                      href="https://data.tuik.gov.tr"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="px-3 py-1.5 text-xs font-semibold text-[#1C2418] bg-white border border-[#D8D2C2] hover:bg-[#F0EDE4] rounded-lg transition-colors flex items-center gap-1.5"
+                    >
+                      <ExternalLink className="w-3.5 h-3.5 text-[#5B6B32]" /> TÜİK Veri Portalı
+                    </a>
+                  </div>
+                </div>
+              </div>
+
+              {/* 1. ADIM: KİMLİK DOĞRULAMA VE TOKEN ALMA (4.1 & 4.3) */}
+              <div className="atlas-card p-6 rounded-2xl">
+                <div className="flex items-center justify-between mb-4 border-b border-[#F0EDE4] pb-3">
+                  <div className="flex items-center gap-2">
+                    <span className="w-6 h-6 rounded-full bg-[#5B6B32] text-white text-xs font-bold flex items-center justify-center">1</span>
+                    <h4 className="text-sm font-bold text-[#1C2418]">
+                      Kimlik Doğrulama ve Token Servisi (OAuth2 Bearer Token)
+                    </h4>
+                  </div>
+                  <span className="text-[11px] text-[#6B7260] font-mono">
+                    POST giris.tuik.gov.tr/.../token
+                  </span>
+                </div>
+
+                <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                  {/* Sol: API Key Girişi */}
+                  <div className="lg:col-span-2 space-y-3.5">
+                    <div>
+                      <label className="block text-[11px] font-bold text-[#6B7260] uppercase tracking-wider mb-1">
+                        SMS Doğrulamalı TÜİK API Anahtarı (API Key)
+                      </label>
+                      <div className="relative flex items-center">
+                        <Key className="w-4 h-4 text-[#A6AC9A] absolute left-3 pointer-events-none" />
+                        <input
+                          type={showApiKey ? 'text' : 'password'}
+                          value={sdmxApiKey}
+                          onChange={(e) => setSdmxApiKey(e.target.value)}
+                          placeholder="Örn: 9f8a7b6c5d4e3f2a1b0c..."
+                          className="w-full text-xs font-mono bg-white border border-[#D8D2C2] rounded-lg pl-9 pr-24 py-2.5 outline-none focus:border-[#5B6B32]"
+                        />
+                        <button
+                          type="button"
+                          onClick={() => setShowApiKey(!showApiKey)}
+                          className="absolute right-3 text-xs text-[#6B7260] hover:text-[#1C2418] flex items-center gap-1 font-semibold"
+                        >
+                          {showApiKey ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
+                          {showApiKey ? 'Gizle' : 'Göster'}
+                        </button>
+                      </div>
+                      <p className="text-[11px] text-[#A6AC9A] mt-1">
+                        Anahtarınız yalnızca tarayıcınızın yerel depolama (localStorage) alanında tutulur; hiçbir sunucuya gönderilmez.
+                      </p>
+                    </div>
+
+                    <div className="flex flex-wrap items-center gap-2.5">
+                      <button
+                        onClick={handleGetTuikToken}
+                        disabled={sdmxIsLoadingToken || !sdmxApiKey.trim()}
+                        className="px-4 py-2 text-xs font-bold text-white bg-[#5B6B32] hover:bg-[#4E5C2A] disabled:opacity-50 rounded-lg transition-all flex items-center gap-2 shadow-sm"
+                      >
+                        <Zap className="w-4 h-4 text-amber-300" />
+                        {sdmxIsLoadingToken ? 'TÜİK İle Doğrulanıyor...' : 'TÜİK\'ten Token Al (OAuth2)'}
+                      </button>
+
+                      {sdmxApiKey && (
+                        <button
+                          onClick={() => handleSaveApiKey(sdmxApiKey)}
+                          className="px-3 py-2 text-xs font-semibold text-[#1C2418] bg-white border border-[#D8D2C2] hover:bg-[#F0EDE4] rounded-lg transition-colors"
+                        >
+                          Anahtarı Kaydet
+                        </button>
+                      )}
+                    </div>
+
+                    {sdmxTokenError && (
+                      <div className="p-3 bg-red-50 border border-red-200 rounded-lg text-xs text-red-700 flex items-start gap-2">
+                        <AlertCircle className="w-4 h-4 text-red-600 shrink-0 mt-0.5" />
+                        <span>{sdmxTokenError}</span>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Sağ: Token Durum Rozeti ve Rehber */}
+                  <div className="bg-[#FBF9F4] p-4 rounded-xl border border-[#D8D2C2] flex flex-col justify-between">
+                    <div>
+                      <span className="text-[10px] font-bold text-[#6B7260] uppercase tracking-wider block mb-1">
+                        Erişim Belirteci Durumu
+                      </span>
+                      {sdmxToken ? (
+                        <div className="space-y-2">
+                          <div className="flex items-center gap-2 text-xs font-bold text-emerald-700">
+                            <CheckCircle2 className="w-4 h-4 text-emerald-600" />
+                            <span>Bearer Token Aktif</span>
+                          </div>
+                          <div className="font-mono text-[10px] bg-white p-2 rounded border border-[#D8D2C2] text-[#1C2418] break-all">
+                            {sdmxToken.access_token.slice(0, 32)}...{sdmxToken.access_token.slice(-16)}
+                          </div>
+                          <div className="text-[10px] text-[#6B7260]">
+                            Geçerlilik: <strong>{sdmxToken.expires_in} saniye</strong> ({new Date(sdmxToken.obtainedAt).toLocaleTimeString('tr-TR')})
+                          </div>
+                        </div>
+                      ) : (
+                        <div className="text-xs text-[#6B7260] space-y-1">
+                          <p>Henüz aktif bir belirteç alınmadı.</p>
+                          <div className="text-[11px] text-[#A6AC9A] mt-2">
+                            <strong>Nasıl Alınır?</strong><br />
+                            TÜİK Veri Portalı &gt; Kullanıcı Ayarları &gt; Kullanıcı Bilgileri &gt; Telefon SMS Doğrulama &gt; API Anahtarı.
+                          </div>
+                        </div>
+                      )}
+                    </div>
+
+                    {sdmxToken && (
+                      <div className="mt-3 pt-2 border-t border-[#D8D2C2] flex justify-end">
+                        <button
+                          onClick={() => copySnippet(sdmxToken.access_token, 'token')}
+                          className="text-[11px] font-semibold text-[#5B6B32] hover:underline flex items-center gap-1"
+                        >
+                          <Copy className="w-3.5 h-3.5" /> Token'ı Kopyala
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
+
+              {/* 2. ADIM: VERİ AKIŞI (DATAFLOW) VE SORGULAMA PARAMETRELERİ (5.1 & 6.1) */}
+              <div className="atlas-card p-6 rounded-2xl">
+                <div className="flex items-center justify-between mb-4 border-b border-[#F0EDE4] pb-3">
+                  <div className="flex items-center gap-2">
+                    <span className="w-6 h-6 rounded-full bg-[#C47A3A] text-white text-xs font-bold flex items-center justify-center">2</span>
+                    <h4 className="text-sm font-bold text-[#1C2418]">
+                      Tarımsal Veri Akışı (Dataflow) ve Filtre Seçimi
+                    </h4>
+                  </div>
+                  <span className="text-[11px] text-[#6B7260] font-mono">
+                    GET nsiws.tuik.gov.tr/rest/data/...
+                  </span>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                  {/* Veri Akışı Seçimi */}
+                  <div className="sm:col-span-2">
+                    <label className="block text-[11px] font-bold text-[#6B7260] uppercase tracking-wider mb-1">
+                      Resmî TÜİK Veri Akışı (Dataflow)
+                    </label>
+                    <select
+                      value={selectedDataflowId}
+                      onChange={(e) => {
+                        setSelectedDataflowId(e.target.value);
+                        if (e.target.value !== 'custom') setCustomDataflowId('');
+                      }}
+                      className="w-full text-xs font-semibold bg-white border border-[#D8D2C2] rounded-lg px-3 py-2 outline-none focus:border-[#5B6B32]"
+                    >
+                      {PREDEFINED_AGRI_DATAFLOWS.map(df => (
+                        <option key={df.dataflowId} value={df.dataflowId}>
+                          {df.nameTr} [{df.dataflowId}]
+                        </option>
+                      ))}
+                      <option value="custom">✍️ Özel Veri Akışı ID'si Gir...</option>
+                    </select>
+
+                    {selectedDataflowId === 'custom' && (
+                      <input
+                        type="text"
+                        value={customDataflowId}
+                        onChange={(e) => setCustomDataflowId(e.target.value)}
+                        placeholder="Örn: DF_TARIM_GFE_2020"
+                        className="w-full mt-2 text-xs font-mono bg-white border border-[#D8D2C2] rounded-lg px-3 py-2 outline-none focus:border-[#5B6B32]"
+                      />
+                    )}
+                  </div>
+
+                  {/* Format Seçimi */}
+                  <div>
+                    <label className="block text-[11px] font-bold text-[#6B7260] uppercase tracking-wider mb-1">
+                      Çıktı Formatı (?format=)
+                    </label>
+                    <select
+                      value={sdmxFormat}
+                      onChange={(e) => setSdmxFormat(e.target.value as any)}
+                      className="w-full text-xs font-semibold bg-white border border-[#D8D2C2] rounded-lg px-3 py-2 outline-none focus:border-[#5B6B32]"
+                    >
+                      <option value="SDMX-CSV">SDMX-CSV 1.0 (Tablo & Analiz Uyumlu)</option>
+                      <option value="JSON">JSON (JSON-stat Formatı)</option>
+                      <option value="SDMX_2_1_STRUCTURED">SDMX-ML 2.1 Structured Data (XML)</option>
+                    </select>
+                  </div>
+
+                  {/* Seri Anahtarı (Dimensions) */}
+                  <div>
+                    <label className="block text-[11px] font-bold text-[#6B7260] uppercase tracking-wider mb-1">
+                      Seri Anahtarı / Boyut Filtresi
+                    </label>
+                    <input
+                      type="text"
+                      value={sdmxSeriesKey}
+                      onChange={(e) => setSdmxSeriesKey(e.target.value)}
+                      placeholder="Örn: A.TR.13.1_A_1 veya .....3"
+                      className="w-full text-xs font-mono bg-white border border-[#D8D2C2] rounded-lg px-3 py-2 outline-none focus:border-[#5B6B32]"
+                    />
+                  </div>
+
+                  {/* Başlangıç Yılı */}
+                  <div>
+                    <label className="block text-[11px] font-bold text-[#6B7260] uppercase tracking-wider mb-1">
+                      Başlangıç Yılı (?startPeriod=)
+                    </label>
+                    <input
+                      type="number"
+                      value={sdmxStartPeriod}
+                      onChange={(e) => setSdmxStartPeriod(parseInt(e.target.value, 10))}
+                      className="w-full text-xs font-semibold bg-white border border-[#D8D2C2] rounded-lg px-3 py-2 outline-none focus:border-[#5B6B32]"
+                    />
+                  </div>
+
+                  {/* Bitiş Yılı */}
+                  <div>
+                    <label className="block text-[11px] font-bold text-[#6B7260] uppercase tracking-wider mb-1">
+                      Bitiş Yılı (?endPeriod=)
+                    </label>
+                    <input
+                      type="number"
+                      value={sdmxEndPeriod}
+                      onChange={(e) => setSdmxEndPeriod(parseInt(e.target.value, 10))}
+                      className="w-full text-xs font-semibold bg-white border border-[#D8D2C2] rounded-lg px-3 py-2 outline-none focus:border-[#5B6B32]"
+                    />
+                  </div>
+                </div>
+
+                {/* Dinamik URL Göstergesi */}
+                <div className="mt-4 pt-3 border-t border-[#F0EDE4]">
+                  <span className="text-[10px] font-bold text-[#6B7260] uppercase tracking-wider block mb-1">
+                    Üretilen TÜİK SDMX REST İstek URL'si:
+                  </span>
+                  <div className="flex items-center gap-2">
+                    <div className="flex-1 font-mono text-xs bg-[#FBF9F4] p-2.5 rounded-lg border border-[#D8D2C2] text-[#1C2418] break-all select-all">
+                      {currentSdmxDataUrl}
+                    </div>
+                    <button
+                      onClick={() => copySnippet(currentSdmxDataUrl, 'url')}
+                      className="p-2.5 text-xs bg-white hover:bg-[#F0EDE4] border border-[#D8D2C2] rounded-lg transition-colors shrink-0"
+                      title="URL'yi Kopyala"
+                    >
+                      {sdmxCopiedKey === 'url' ? <Check className="w-4 h-4 text-emerald-600" /> : <Copy className="w-4 h-4 text-[#6B7260]" />}
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              {/* 3. ADIM: CANLI SORGULAMA & TERMİNAL ENTEGRASYON KONSOLU */}
+              <div className="atlas-card p-6 rounded-2xl">
+                <div className="flex items-center justify-between mb-4 border-b border-[#F0EDE4] pb-3">
+                  <div className="flex items-center gap-2">
+                    <span className="w-6 h-6 rounded-full bg-[#1C2418] text-white text-xs font-bold flex items-center justify-center">3</span>
+                    <h4 className="text-sm font-bold text-[#1C2418]">
+                      Canlı Sorgulama ve Konsol Entegrasyonu
+                    </h4>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <button
+                      onClick={handleRunSdmxLiveQuery}
+                      disabled={sdmxIsLoadingQuery || !sdmxToken}
+                      className="px-4 py-2 text-xs font-bold text-white bg-[#C47A3A] hover:bg-[#B36829] disabled:opacity-50 rounded-lg transition-all flex items-center gap-2 shadow-sm"
+                    >
+                      <Zap className="w-4 h-4" />
+                      {sdmxIsLoadingQuery ? 'TÜİK Servisinden Çekiliyor...' : '⚡ Canlı Servisten Çek (Fetch)'}
+                    </button>
+                  </div>
+                </div>
+
+                {/* Hata veya CORS Bilgilendirmesi */}
+                {sdmxQueryError && (
+                  <div className="mb-4 p-3 bg-amber-50 border border-amber-200 rounded-xl text-xs text-amber-900 space-y-1">
+                    <div className="font-bold flex items-center gap-1.5 text-amber-800">
+                      <AlertCircle className="w-4 h-4" />
+                      Tarayıcı Koruması / Doğrudan Bağlantı Notu
+                    </div>
+                    <p className="leading-relaxed">
+                      {sdmxQueryError}
+                    </p>
+                  </div>
+                )}
+
+                {/* 1 Tıkla Kopyalanabilir Terminal ve Kod Şablonları */}
+                <div className="mb-4">
+                  <div className="text-[11px] font-bold text-[#6B7260] uppercase tracking-wider mb-2 flex items-center gap-1.5">
+                    <Terminal className="w-3.5 h-3.5 text-[#5B6B32]" />
+                    <span>Terminal ve Yazılım İçin Hazır İstek Kodları (1 Tıkla Kopyala)</span>
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                    {/* cURL */}
+                    <div className="bg-[#1C2418] text-white p-3 rounded-xl shadow-xs">
+                      <div className="flex items-center justify-between text-xs mb-1.5">
+                        <span className="font-bold text-amber-300 font-mono">cURL Komutu</span>
+                        <button
+                          onClick={() => copySnippet(generateSdmxCurlCommand(sdmxToken?.access_token || '', currentSdmxDataUrl), 'curl')}
+                          className="px-2 py-0.5 text-[10px] bg-white/10 hover:bg-white/20 rounded text-[#D8D2C2] flex items-center gap-1"
+                        >
+                          {sdmxCopiedKey === 'curl' ? <Check className="w-3 h-3 text-emerald-400" /> : <Copy className="w-3 h-3" />}
+                          Kopyala
+                        </button>
+                      </div>
+                      <pre className="text-[10px] text-white/80 font-mono overflow-x-auto whitespace-pre-wrap">
+                        {generateSdmxCurlCommand(sdmxToken?.access_token || '{token}', currentSdmxDataUrl)}
+                      </pre>
+                    </div>
+
+                    {/* PowerShell */}
+                    <div className="bg-[#1C2418] text-white p-3 rounded-xl shadow-xs">
+                      <div className="flex items-center justify-between text-xs mb-1.5">
+                        <span className="font-bold text-sky-300 font-mono">PowerShell</span>
+                        <button
+                          onClick={() => copySnippet(generateSdmxPowerShellCommand(sdmxToken?.access_token || '', currentSdmxDataUrl), 'ps')}
+                          className="px-2 py-0.5 text-[10px] bg-white/10 hover:bg-white/20 rounded text-[#D8D2C2] flex items-center gap-1"
+                        >
+                          {sdmxCopiedKey === 'ps' ? <Check className="w-3 h-3 text-emerald-400" /> : <Copy className="w-3 h-3" />}
+                          Kopyala
+                        </button>
+                      </div>
+                      <pre className="text-[10px] text-white/80 font-mono overflow-x-auto whitespace-pre-wrap">
+                        {generateSdmxPowerShellCommand(sdmxToken?.access_token || '{token}', currentSdmxDataUrl)}
+                      </pre>
+                    </div>
+
+                    {/* Python */}
+                    <div className="bg-[#1C2418] text-white p-3 rounded-xl shadow-xs">
+                      <div className="flex items-center justify-between text-xs mb-1.5">
+                        <span className="font-bold text-emerald-300 font-mono">Python Requests</span>
+                        <button
+                          onClick={() => copySnippet(generateSdmxPythonScript(sdmxToken?.access_token || '', currentSdmxDataUrl), 'py')}
+                          className="px-2 py-0.5 text-[10px] bg-white/10 hover:bg-white/20 rounded text-[#D8D2C2] flex items-center gap-1"
+                        >
+                          {sdmxCopiedKey === 'py' ? <Check className="w-3 h-3 text-emerald-400" /> : <Copy className="w-3 h-3" />}
+                          Kopyala
+                        </button>
+                      </div>
+                      <pre className="text-[10px] text-white/80 font-mono overflow-x-auto whitespace-pre-wrap">
+                        {generateSdmxPythonScript(sdmxToken?.access_token || '{token}', currentSdmxDataUrl)}
+                      </pre>
+                    </div>
+                  </div>
+                </div>
+
+                {/* SDMX Yanıt / Yapıştırma Alanı */}
+                <div>
+                  <div className="flex items-center justify-between mb-1.5">
+                    <label className="text-[11px] font-bold text-[#6B7260] uppercase tracking-wider">
+                      SDMX-CSV veya JSON Servis Yanıtı (Buraya Yapıştırabilirsiniz)
+                    </label>
+                    {sdmxRawResponse && (
+                      <span className="text-[11px] text-[#5B6B32] font-semibold">
+                        {sdmxRawResponse.length} Karakter Yüklendi
+                      </span>
+                    )}
+                  </div>
+                  <textarea
+                    rows={6}
+                    value={sdmxRawResponse}
+                    onChange={(e) => setSdmxRawResponse(e.target.value)}
+                    placeholder="Terminalde veya Postman'de çalıştırdığınız SDMX-CSV çıktısını buraya yapıştırıp analiz tablosuna aktarabilirsiniz..."
+                    className="w-full text-xs font-mono bg-white border border-[#D8D2C2] rounded-xl p-3 outline-none focus:border-[#5B6B32]"
+                  />
+
+                  <div className="mt-3 flex flex-wrap items-center justify-between gap-3">
+                    <p className="text-[11px] text-[#6B7260]">
+                      Format: Standart <strong>SDMX-CSV 1.0</strong> (DATAFLOW, TIME_PERIOD, REF_AREA, OBS_VALUE).
+                    </p>
+
+                    <button
+                      onClick={handleParseSdmxResponseAndAddToAnalysis}
+                      disabled={!sdmxRawResponse.trim()}
+                      className="px-4 py-2 text-xs font-bold text-white bg-[#5B6B32] hover:bg-[#4E5C2A] disabled:opacity-50 rounded-lg transition-all flex items-center gap-2 shadow-sm"
+                    >
+                      <PlusCircle className="w-4 h-4" /> Bu Yanıtı Ayrıştır ve Analiz Panosuna Aktar
+                    </button>
+                  </div>
+                </div>
+
+              </div>
+
             </div>
           )}
 
