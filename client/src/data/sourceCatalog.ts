@@ -45,26 +45,37 @@ export const sourceCatalog: SourceMetadata[] = [
     notes: 'Girdi tarafında gübre (20.15), motorin (19.20), yem (10.91); Çıktı tarafında buğday (01.11), süt (01.41) vb. kodlanır.'
   },
   {
-    id: 'tuik-bitkisel-104',
-    name: 'Bitkisel Üretim İstatistikleri (BÜİ — MEDAS kn=104)',
+    id: 'tuik-denge-104',
+    name: 'Bitkisel Ürün Denge Tabloları (TÜİK MEDAS kn=104)',
     institution: 'Türkiye İstatistik Kurumu (TÜİK)',
-    description: 'Tarla ürünleri, sebze, meyve, içecek ve baharat bitkilerine ait ekilen/hasat edilen alan, üretim miktarı ve ağaç sayıları detaylı sorgulama modülü.',
-    frequency: 'Yıllık (Geçici / Kesinleşmiş)',
-    coverage: 'İl / İBBS Düzey 3 (81 İl Düzeyi)',
+    description: 'Tarımsal ürünlerin arz ve kullanım dengesi; üretim, yurt içi tüketim, tohumluk/yemlik/endüstriyel kullanım, ithalat, ihracat, stok değişimi, kişi başına tüketim (kg) ve yeterlilik derecesi (%) göstergeleri (MEDAS kn=104).',
+    frequency: 'Yıllık / Tarımsal Pazarlama Yılı',
+    coverage: 'Türkiye Geneli / Ürün Düzeyi',
     officialUrl: 'https://biruni.tuik.gov.tr/medas/?kn=104&locale=tr',
     sdmxAvailable: true,
-    notes: 'TÜİK MEDAS kn=104 doğrudan detaylı sorgulama tablosudur. İndirilen CSV/Excel çıktısı TarımViz tarafından otomatik ayrıştırılır.'
+    notes: 'TÜİK MEDAS kn=104 doğrudan Bitkisel Ürün Denge Tablosudur. Ürün arz-talep ve gıda arz güvenliği (yeterlilik derecesi) analizlerinde esastır.'
   },
   {
     id: 'tuik-bitkisel-92',
     name: 'Bitkisel Üretim İstatistikleri (BÜİ — MEDAS kn=92)',
     institution: 'Türkiye İstatistik Kurumu (TÜİK)',
-    description: 'Tarla ürünleri, sebze ve meyvelere ilişkin genel ekilen alan, verim ve üretim miktarı zaman serisi tablosu (MEDAS kn=92).',
+    description: 'Tarla ürünleri, sebze ve meyvelere ilişkin ekilen/hasat edilen alan, verim ve üretim miktarı zaman serisi tablosu (MEDAS kn=92).',
     frequency: 'Yıllık (Geçici / Kesinleşmiş)',
-    coverage: 'İl / İBBS Düzey 3 (İlçeler toplulaştırılmış)',
+    coverage: 'İl / İBBS Düzey 3 (81 İl Düzeyi)',
     officialUrl: 'https://biruni.tuik.gov.tr/medas/?kn=92&locale=tr',
     sdmxAvailable: true,
-    notes: 'TÜİK MEDAS kn=92 doğrudan tarihsel ve genel sorgulama tablosudur.'
+    notes: 'TÜİK MEDAS kn=92 doğrudan bitkisel üretim ve rekolte sorgulama tablosudur.'
+  },
+  {
+    id: 'tuik-fiyat-83',
+    name: 'Tarımsal Ürün Fiyatları ve Üretim Değerleri (ÇEGF — MEDAS kn=83)',
+    institution: 'Türkiye İstatistik Kurumu (TÜİK)',
+    description: 'Çiftçinin eline geçen birim fiyatlar (ÇEGF), brüt ve net tarımsal üretim değerleri (MEDAS kn=83).',
+    frequency: 'Aylık / Yıllık',
+    coverage: 'Bölgesel ve İl Düzeyi',
+    officialUrl: 'https://biruni.tuik.gov.tr/medas/?kn=83&locale=tr',
+    sdmxAvailable: true,
+    notes: 'TÜİK MEDAS kn=83 çiftçi satış fiyatları tablosudur.'
   },
   {
     id: 'tuik-hayvansal',
