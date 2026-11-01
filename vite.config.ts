@@ -8,6 +8,9 @@ export default defineConfig({
   base: '/sopa/', // GitHub Pages repo name
   build: {
     outDir: 'dist',
+    rollupOptions: {
+      input: 'client/index.html'
+    }
   },
   test: {
     globals: true,
