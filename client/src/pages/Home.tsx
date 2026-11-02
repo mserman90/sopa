@@ -664,6 +664,16 @@ export const Home: React.FC = () => {
                 <span>BÜİ (kn=92) Yükle</span>
               </button>
 
+              <a
+                href="https://biruni.tuik.gov.tr/medas/yardim/MedasYardimUygulama.pdf"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="px-3 py-1.5 text-xs font-semibold text-[#1C2418] bg-[#FBF9F4] hover:bg-[#F0EDE4] border border-[#D8D2C2] rounded-lg transition-colors flex items-center gap-1.5 shadow-2xs"
+                title="TÜİK MEDAS Resmî Kullanıcı Kılavuzu (PDF — 4 Adımda Veri Çekme)"
+              >
+                <FileText className="w-3.5 h-3.5 text-[#5B6B32]" /> MEDAS Kılavuzu (PDF)
+              </a>
+
               <button
                 onClick={() => setActiveTab('sdmx')}
                 className={`px-3 py-1.5 text-xs font-semibold rounded-lg transition-colors flex items-center gap-1.5 shadow-2xs ${
@@ -1566,6 +1576,79 @@ export const Home: React.FC = () => {
                       <Download className="w-3.5 h-3.5" />
                       <span>Toplu Veri İndirme (Bulk Download)</span>
                     </a>
+
+                    <a
+                      href="https://biruni.tuik.gov.tr/medas/yardim/MedasYardimUygulama.pdf"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="px-3.5 py-2 text-xs font-bold text-[#1C2418] bg-white hover:bg-[#F0EDE4] border border-[#D8D2C2] rounded-xl transition-all flex items-center gap-1.5 shadow-2xs"
+                      title="TÜİK MEDAS Resmî Kullanıcı Kılavuzu (10 Sayfalık PDF)"
+                    >
+                      <FileText className="w-3.5 h-3.5 text-[#5B6B32]" />
+                      <span>MEDAS Kılavuzu (PDF)</span>
+                    </a>
+                  </div>
+                </div>
+
+                {/* TÜİK MEDAS 4 Adımlı Veri Çekme Yönergesi Rehber Kartı */}
+                <div className="atlas-card p-4 rounded-xl bg-gradient-to-r from-[#FBF9F4] via-white to-white border border-[#BDC8A3]/70">
+                  <div className="flex items-center justify-between gap-2 mb-2 pb-2 border-b border-[#D8D2C2]/50">
+                    <div className="flex items-center gap-2">
+                      <FileText className="w-4 h-4 text-[#5B6B32]" />
+                      <span className="text-xs font-bold text-[#1C2418]">
+                        TÜİK MEDAS Resmî Kullanıcı Kılavuzuna Göre 4 Adımda Veri Çekme ve Raporlama
+                      </span>
+                    </div>
+                    <a
+                      href="https://biruni.tuik.gov.tr/medas/yardim/MedasYardimUygulama.pdf"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-[11px] text-[#5B6B32] hover:underline font-semibold flex items-center gap-1"
+                    >
+                      Resmî PDF Dokümanı (10 Sayfa) <ChevronRight className="w-3 h-3" />
+                    </a>
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 text-xs">
+                    <div className="bg-white p-2.5 rounded-lg border border-[#D8D2C2]">
+                      <div className="font-bold text-[#5B6B32] mb-1 flex items-center gap-1.5">
+                        <span className="w-5 h-5 rounded-full bg-[#EFF2E6] text-[#5B6B32] flex items-center justify-center font-mono text-[10px] font-bold">1</span>
+                        <span>Gösterge Seçimi</span>
+                      </div>
+                      <p className="text-[11px] text-[#6B7260] leading-snug">
+                        İlgili konuyu seçin (<code className="font-mono text-emerald-800">kn=92</code> BÜİ, <code className="font-mono text-emerald-800">kn=104</code> Denge vb.). Kırılımları işaretleyip <strong>"Göstergeleri Ekle"</strong> butonuna basın.
+                      </p>
+                    </div>
+
+                    <div className="bg-white p-2.5 rounded-lg border border-[#D8D2C2]">
+                      <div className="font-bold text-[#5B6B32] mb-1 flex items-center gap-1.5">
+                        <span className="w-5 h-5 rounded-full bg-[#EFF2E6] text-[#5B6B32] flex items-center justify-center font-mono text-[10px] font-bold">2</span>
+                        <span>Zaman Kısıtları</span>
+                      </div>
+                      <p className="text-[11px] text-[#6B7260] leading-snug">
+                        Zaman sekmesinde periyot türünü (Yıllık / Aylık) ve analiz etmek istediğiniz başlangıç-bitiş yıl aralığını belirleyin.
+                      </p>
+                    </div>
+
+                    <div className="bg-white p-2.5 rounded-lg border border-[#D8D2C2]">
+                      <div className="font-bold text-[#5B6B32] mb-1 flex items-center gap-1.5">
+                        <span className="w-5 h-5 rounded-full bg-[#EFF2E6] text-[#5B6B32] flex items-center justify-center font-mono text-[10px] font-bold">3</span>
+                        <span>Coğrafi Düzey</span>
+                      </div>
+                      <p className="text-[11px] text-[#6B7260] leading-snug">
+                        Düzey sekmesinde <strong>İBBS Düzey 3 (81 İl)</strong> veya Türkiye Geneli seçimini yapıp <strong>"Rapor Oluştur"</strong> butonuna tıklayın.
+                      </p>
+                    </div>
+
+                    <div className="bg-white p-2.5 rounded-lg border border-[#D8D2C2]">
+                      <div className="font-bold text-[#C47A3A] mb-1 flex items-center gap-1.5">
+                        <span className="w-5 h-5 rounded-full bg-[#FBF1E6] text-[#C47A3A] flex items-center justify-center font-mono text-[10px] font-bold">4</span>
+                        <span>Rapor & CSV Çıktısı</span>
+                      </div>
+                      <p className="text-[11px] text-[#6B7260] leading-snug">
+                        Satır ve sütunları sürükle-bırak ile pivotlayın. <strong>CSV</strong> butonuna basarak indirin ve doğrudan TarımViz'e yükleyin.
+                      </p>
+                    </div>
                   </div>
                 </div>
 

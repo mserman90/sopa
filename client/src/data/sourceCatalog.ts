@@ -78,6 +78,17 @@ export const sourceCatalog: SourceMetadata[] = [
     notes: 'TÜİK MEDAS kn=92 doğrudan bitkisel üretim ve rekolte sorgulama tablosudur.'
   },
   {
+    id: 'tuik-medas-yardim-kilavuzu',
+    name: 'TÜİK MEDAS Kullanıcı Kılavuzu & Veri İndirme Yönergesi',
+    institution: 'Türkiye İstatistik Kurumu (TÜİK) — Veri Dağıtım Daire Başkanlığı',
+    description: 'TÜİK Merkezi Dağıtım Sistemi (MEDAS) resmî uygulama yardım kılavuzu (10 sayfalık PDF). Gösterge seçimi, periyot/zaman filtreleme, coğrafi düzey (İBBS 1/2/3 ve 81 il), satır/sütun sürükle-bırak pivotlama ve CSV/XLS formatında dışa aktarma adımlarını detaylandırır.',
+    frequency: 'Resmî Kılavuz (PDF Dokümanı)',
+    coverage: 'Tüm MEDAS Konu ve Tabloları (kn=92 BÜİ, kn=104 Denge, kn=83 Tarım-ÜFE, kn=82 Tarım-GFE vb.)',
+    officialUrl: 'https://biruni.tuik.gov.tr/medas/yardim/MedasYardimUygulama.pdf',
+    sdmxAvailable: false,
+    notes: 'MEDAS Rapor sekmesinden alınan CSV çıktıları (il_adi, urun_adi, uretim_(ton)) doğrudan TarımViz CSV yükleme modülü tarafından otomatik ayrıştırılır.'
+  },
+  {
     id: 'tuik-fiyat-83',
     name: 'Tarımsal Ürün Fiyatları ve Üretim Değerleri (ÇEGF — MEDAS kn=83)',
     institution: 'Türkiye İstatistik Kurumu (TÜİK)',
