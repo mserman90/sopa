@@ -8,13 +8,22 @@ import {
   HelpCircle, ChevronRight, Filter, RefreshCw, Layers, Database,
   TrendingUp, Scale, Sprout, Wheat, Building2, Search, ArrowRight,
   ShieldCheck, Calendar, MapPin, ExternalLink, PlusCircle,
-  Zap, Key, Copy, Terminal, Code2, Check, Eye, EyeOff
+  Zap, Key, Copy, Terminal, Code2, Check, Eye, EyeOff,
+  FolderTree, ChevronDown, BookOpen
 } from 'lucide-react';
 import { 
   TarimRecord, SektorType, parseAndValidateCSV, 
   computeKPIs, generateCSVTemplate, exportRecordsToCSV 
 } from '../lib/analysis.ts';
 import { sourceCatalog } from '../data/sourceCatalog.ts';
+import { TUIK_TARIM_TAXONOMY, searchTuikTarimTaxonomy } from '../data/tuikTarimTaxonomy.ts';
+import { 
+  searchUtobus2021, 
+  UTOBUS_UNITS, 
+  UTOBUS_CHAPTERS, 
+  getUtobusStats, 
+  type UtobusItem 
+} from '../data/utobus2021Catalog.ts';
 import { 
   executeAgriQuery, QueryResultItem, MASTER_AGRI_CATALOG, 
   findRegionForCity, getSeasonalityFactor,
@@ -78,6 +87,28 @@ export const Home: React.FC = () => {
   const [sdmxQueryError, setSdmxQueryError] = useState<string | null>(null);
   const [sdmxCopiedKey, setSdmxCopiedKey] = useState<string | null>(null);
 
+  // TÜİK Tarım Temaları ve Tablo Ağacı State'leri
+  const [sourcesViewMode, setSourcesViewMode] = useState<'taxonomy' | 'utobus' | 'catalog'>('taxonomy');
+  const [taxonomySearch, setTaxonomySearch] = useState<string>('');
+  const [utobusSearch, setUtobusSearch] = useState<string>('');
+  const [utobusUnitFilter, setUtobusUnitFilter] = useState<string>('all');
+  const [utobusChapterFilter, setUtobusChapterFilter] = useState<string>('all');
+  const [utobusCopiedCode, setUtobusCopiedCode] = useState<string | null>(null);
+  const [expandedThemes, setExpandedThemes] = useState<Record<string, boolean>>({
+    'bitkisel-uretim': true,
+    'bitkisel-denge': true,
+    'tarim-cevre': true,
+    'hayvansal-uretim': true,
+    'tarimsal-makine': true,
+    'tarim-fiyatlari': true,
+    'isletme-isgucu': true,
+    'balikcilik': false
+  });
+
+  const toggleTheme = (themeId: string) => {
+    setExpandedThemes(prev => ({ ...prev, [themeId]: !prev[themeId] }));
+  };
+
   // Akıllı Sorgulama Modülü State'leri
   const [queryCity, setQueryCity] = useState<string>('Konya');
   const [queryType, setQueryType] = useState<'hepsi' | 'cikti' | 'girdi'>('hepsi');
@@ -106,6 +137,18 @@ export const Home: React.FC = () => {
   const tgfeComposite = useMemo(() => {
     return calculateCompositeTGFE(queryResults);
   }, [queryResults]);
+
+  // UTOBÜS 2021 Kataloğu Filtreleme ve İstatistikleri
+  const filteredUtobusItems = useMemo(() => {
+    return searchUtobus2021({
+      query: utobusSearch,
+      unitCode: utobusUnitFilter === 'all' ? undefined : utobusUnitFilter,
+      chapter: utobusChapterFilter === 'all' ? undefined : utobusChapterFilter,
+      limit: 100
+    });
+  }, [utobusSearch, utobusUnitFilter, utobusChapterFilter]);
+
+  const utobusStats = useMemo(() => getUtobusStats(), []);
 
   // İlk sorgulamayı otomatik çalıştır
   useEffect(() => {
@@ -1038,7 +1081,7 @@ export const Home: React.FC = () => {
                   </div>
 
                   <div className="text-xs text-[#6B7260]">
-                    Madde düzeyinde <strong>TAORBA 2008_2</strong> ve <strong>CPA 2008</strong> sınıflamaları ile <strong>2020=100</strong> baz endeksleri içerir.
+                    Madde düzeyinde <strong>UTOBÜS 2021</strong>, <strong>TAORBA 2008_2</strong> ve <strong>CPA 2008</strong> sınıflamaları ile <strong>2020=100</strong> baz endeksleri içerir.
                   </div>
                 </div>
 
@@ -1049,7 +1092,7 @@ export const Home: React.FC = () => {
                         <th className="px-3 py-3">Tür</th>
                         <th className="px-3 py-3">AB 2020 Sınıflaması</th>
                         <th className="px-4 py-3">Ürün / Girdi Adı</th>
-                        <th className="px-3 py-3">Madde Kodları (TAORBA & CPA)</th>
+                        <th className="px-3 py-3">Sınıflama Kodları (UTOBÜS, TAORBA & CPA)</th>
                         <th className="px-3 py-3">En Alt Kırılım / Kalite</th>
                         <th className="px-3 py-3 text-right">TÜİK / Borsa / Hal</th>
                         <th className="px-4 py-3 text-right font-extrabold text-[#1C2418]">Birim Fiyat</th>
@@ -1113,9 +1156,17 @@ export const Home: React.FC = () => {
                             ) : null}
                           </td>
 
-                          {/* Madde Kodları (TAORBA 2008_2 & CPA 2008) */}
+                          {/* Madde Kodları (UTOBÜS 2021, TAORBA 2008_2 & CPA 2008) */}
                           <td className="px-3 py-3 whitespace-nowrap">
-                            <div className="space-y-0.5 font-mono text-[10px]">
+                            <div className="space-y-1 font-mono text-[10px]">
+                              {item.utobus2021 && (
+                                <div className="bg-emerald-50 text-emerald-900 px-1.5 py-0.5 rounded border border-emerald-200" title={`TÜİK Resmî UTOBÜS 2021: ${item.utobus2021.tanim} (${item.utobus2021.olcuBirimi} - Birim Kodu: ${item.utobus2021.olcuBirimKodu})`}>
+                                  <strong>UTOBÜS:</strong> {item.utobus2021.kod}
+                                  <span className="ml-1 text-[9px] font-sans bg-emerald-200/70 text-emerald-800 px-1 py-0.2 rounded font-semibold">
+                                    {item.utobus2021.olcuBirimi} [{item.utobus2021.olcuBirimKodu}]
+                                  </span>
+                                </div>
+                              )}
                               <div className="bg-slate-100 text-slate-800 px-1.5 py-0.5 rounded border border-slate-200" title="TÜİK TAORBA 2008_2 Madde Kodu">
                                 <strong>TAORBA:</strong> {item.taorba2008_2}
                               </div>
@@ -1409,54 +1460,587 @@ export const Home: React.FC = () => {
           {/* ============================================================ */}
           {activeTab === 'sources' && (
             <div className="space-y-6 max-w-7xl mx-auto">
-              <div className="atlas-card p-6 rounded-xl border-l-4 border-l-[#5B6B32]">
-                <h3 className="text-lg font-bold text-[#1C2418]">TÜİK, EMB ve HKS Resmî Kaynak Kataloğu</h3>
-                <p className="text-xs text-[#6B7260] mt-1">
-                  Uygulama içi akıllı sorgulama motorunun beslendiği resmî istatistiki bültenler, ticaret borsaları tescilleri ve hal kayıt sistemleri.
-                </p>
+              
+              {/* Başlık ve Görünüm Seçici Kartı */}
+              <div className="atlas-card p-6 rounded-2xl border-l-4 border-l-[#5B6B32] bg-gradient-to-r from-white via-white to-[#F0EDE4]/40">
+                <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+                  <div>
+                    <div className="flex items-center gap-2">
+                      <span className="w-2.5 h-2.5 rounded-full bg-[#5B6B32]" />
+                      <h3 className="text-lg font-bold text-[#1C2418]">
+                        TÜİK Veri Portalı "Tarım" İstatistiki Temalar & Kaynak Kataloğu
+                      </h3>
+                      <span className="atlas-badge atlas-badge-olive text-[10px]">
+                        veriportali.tuik.gov.tr
+                      </span>
+                    </div>
+                    <p className="text-xs text-[#6B7260] mt-1 max-w-3xl leading-relaxed">
+                      TÜİK Veri Portalı'nın resmî tema ağacındaki 8 ana tarımsal başlık, veri tabanları, denge tabloları, alet-makine parkı ve çiftçi fiyat serileri.
+                    </p>
+                  </div>
+
+                  {/* Eylemler ve Görünüm Değiştirici */}
+                  <div className="flex flex-wrap items-center gap-2">
+                    <div className="bg-[#F0EDE4] p-1 rounded-xl flex items-center gap-1 border border-[#D8D2C2]">
+                      <button
+                        onClick={() => setSourcesViewMode('taxonomy')}
+                        className={`px-3 py-1.5 text-xs font-bold rounded-lg transition-all flex items-center gap-1.5 ${
+                          sourcesViewMode === 'taxonomy'
+                            ? 'bg-[#5B6B32] text-white shadow-xs'
+                            : 'text-[#6B7260] hover:text-[#1C2418]'
+                        }`}
+                      >
+                        <FolderTree className="w-3.5 h-3.5" />
+                        <span>Tarım Tema Ağacı (8 Tema)</span>
+                      </button>
+
+                      <button
+                        onClick={() => setSourcesViewMode('utobus')}
+                        className={`px-3 py-1.5 text-xs font-bold rounded-lg transition-all flex items-center gap-1.5 ${
+                          sourcesViewMode === 'utobus'
+                            ? 'bg-[#5B6B32] text-white shadow-xs'
+                            : 'text-[#6B7260] hover:text-[#1C2418]'
+                        }`}
+                      >
+                        <Wheat className="w-3.5 h-3.5" />
+                        <span>UTOBÜS 2021 Sınıflaması (1.382 Madde)</span>
+                      </button>
+
+                      <button
+                        onClick={() => setSourcesViewMode('catalog')}
+                        className={`px-3 py-1.5 text-xs font-bold rounded-lg transition-all flex items-center gap-1.5 ${
+                          sourcesViewMode === 'catalog'
+                            ? 'bg-[#5B6B32] text-white shadow-xs'
+                            : 'text-[#6B7260] hover:text-[#1C2418]'
+                        }`}
+                      >
+                        <BookOpen className="w-3.5 h-3.5" />
+                        <span>Kaynak & Metadata Kartları</span>
+                      </button>
+                    </div>
+
+                    <a
+                      href="https://veriportali.tuik.gov.tr/tr/bulk-download"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="px-3.5 py-2 text-xs font-bold text-white bg-[#C47A3A] hover:bg-[#B36829] rounded-xl transition-all flex items-center gap-1.5 shadow-sm"
+                      title="TÜİK Veri Portalı Toplu Veri Seti İndirme (CSV / XML / JSON)"
+                    >
+                      <Download className="w-3.5 h-3.5" />
+                      <span>Toplu Veri İndirme (Bulk Download)</span>
+                    </a>
+                  </div>
+                </div>
+
+                {/* Tema Ağacı Arama Çubuğu */}
+                {sourcesViewMode === 'taxonomy' && (
+                  <div className="mt-4 pt-4 border-t border-[#D8D2C2]/60">
+                    <div className="relative flex items-center">
+                      <Search className="w-4 h-4 text-[#A6AC9A] absolute left-3 pointer-events-none" />
+                      <input
+                        type="text"
+                        value={taxonomySearch}
+                        onChange={(e) => setTaxonomySearch(e.target.value)}
+                        placeholder="TÜİK Tarım Tabloları İçinde Ara... (Örn: 'Traktör', 'Denge', 'Gübre', 'Mevsimlik İşçi', 'Çiğ Süt', 'kn=92')..."
+                        className="w-full text-xs bg-white border border-[#D8D2C2] rounded-xl pl-9 pr-24 py-2.5 outline-none focus:border-[#5B6B32] shadow-2xs"
+                      />
+                      {taxonomySearch && (
+                        <button
+                          onClick={() => setTaxonomySearch('')}
+                          className="absolute right-3 text-xs text-[#6B7260] hover:text-[#1C2418] font-semibold"
+                        >
+                          Temizle
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                )}
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {sourceCatalog.map((src) => (
-                  <div key={src.id} className="atlas-card p-5 rounded-xl space-y-3">
-                    <div className="flex items-start justify-between gap-2">
-                      <div>
-                        <span className="text-[10px] uppercase font-bold text-[#5B6B32] tracking-wider block">
-                          {src.institution}
-                        </span>
-                        <h4 className="font-bold text-sm text-[#1C2418]">{src.name}</h4>
+              {/* 1. GÖRÜNÜM: TÜİK RESMÎ TARIM TEMA VE TABLO AĞACI (TAXONOMY) */}
+              {sourcesViewMode === 'taxonomy' && (
+                <div className="space-y-4">
+                  {TUIK_TARIM_TAXONOMY.map((theme) => {
+                    const isExpanded = expandedThemes[theme.id] ?? true;
+                    
+                    // Arama Filtresi
+                    const filteredSubGroups = theme.altGruplar.map(group => {
+                      if (!taxonomySearch.trim()) return group;
+                      const q = taxonomySearch.toLowerCase().trim();
+                      const matchingTables = group.tablolar.filter(t => 
+                        t.baslik.toLowerCase().includes(q) ||
+                        group.baslik.toLowerCase().includes(q) ||
+                        theme.baslik.toLowerCase().includes(q) ||
+                        (t.medasKn && t.medasKn.toLowerCase().includes(q))
+                      );
+                      return { ...group, tablolar: matchingTables };
+                    }).filter(g => g.tablolar.length > 0);
+
+                    if (taxonomySearch.trim() && filteredSubGroups.length === 0) {
+                      return null;
+                    }
+
+                    const totalThemeTables = filteredSubGroups.reduce((acc, g) => acc + g.tablolar.length, 0);
+
+                    return (
+                      <div key={theme.id} className="atlas-card rounded-2xl overflow-hidden shadow-xs border border-[#D8D2C2]">
+                        {/* Tema Başlığı (Accordion Header) */}
+                        <button
+                          onClick={() => toggleTheme(theme.id)}
+                          className="w-full p-4 bg-[#F0EDE4]/70 hover:bg-[#F0EDE4] transition-colors flex items-center justify-between text-left border-b border-[#D8D2C2]"
+                        >
+                          <div className="flex items-center gap-3">
+                            <span className="font-mono text-xs font-bold px-2 py-0.5 rounded bg-[#5B6B32] text-white">
+                              {theme.kod}
+                            </span>
+                            <div>
+                              <h4 className="font-bold text-sm text-[#1C2418] flex items-center gap-2">
+                                <span>{theme.baslik}</span>
+                                <span className="text-xs text-[#6B7260] font-normal">
+                                  ({totalThemeTables} Tablo/Bülten)
+                                </span>
+                              </h4>
+                              <p className="text-[11px] text-[#6B7260] mt-0.5 line-clamp-1">
+                                {theme.aciklama}
+                              </p>
+                            </div>
+                          </div>
+
+                          <div className="flex items-center gap-2">
+                            <span className="text-xs text-[#6B7260] font-semibold hidden sm:inline">
+                              {isExpanded ? 'Gizle' : 'Genişlet'}
+                            </span>
+                            <ChevronDown className={`w-4 h-4 text-[#6B7260] transition-transform duration-200 ${isExpanded ? 'rotate-180' : ''}`} />
+                          </div>
+                        </button>
+
+                        {/* Tema İçerik Listesi */}
+                        {isExpanded && (
+                          <div className="p-4 sm:p-5 space-y-4 bg-white">
+                            {filteredSubGroups.map((group) => (
+                              <div key={group.id} className="space-y-2">
+                                <div className="text-xs font-bold text-[#5B6B32] uppercase tracking-wider flex items-center gap-1.5 pb-1 border-b border-[#F0EDE4]">
+                                  <span className="w-1.5 h-1.5 rounded-full bg-[#5B6B32]" />
+                                  <span>{group.baslik}</span>
+                                </div>
+
+                                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2.5">
+                                  {group.tablolar.map((table) => (
+                                    <div
+                                      key={table.id}
+                                      className="p-3 rounded-xl border border-[#D8D2C2] bg-[#FBF9F4] hover:bg-white hover:border-[#5B6B32] transition-all flex flex-col justify-between gap-2 shadow-2xs group"
+                                    >
+                                      <div>
+                                        <div className="flex items-center justify-between gap-1 mb-1">
+                                          <span className={`text-[9.5px] font-bold px-1.5 py-0.5 rounded uppercase ${
+                                            table.tur === 'veritabani'
+                                              ? 'bg-emerald-100 text-emerald-800 border border-emerald-300'
+                                              : table.tur === 'bulten'
+                                              ? 'bg-amber-100 text-amber-800 border border-amber-300'
+                                              : 'bg-blue-100 text-blue-800 border border-blue-300'
+                                          }`}>
+                                            {table.tur === 'veritabani' ? '🗄️ Veritabanı' : table.tur === 'bulten' ? '📰 Bülten' : '📊 Tablo'}
+                                          </span>
+
+                                          {table.medasKn && (
+                                            <span className="text-[10px] font-mono text-[#6B7260] bg-white px-1.5 py-0.5 rounded border border-[#D8D2C2]">
+                                              MEDAS {table.medasKn}
+                                            </span>
+                                          )}
+                                        </div>
+
+                                        <div className="text-xs font-bold text-[#1C2418] group-hover:text-[#5B6B32] transition-colors leading-snug">
+                                          {table.baslik}
+                                        </div>
+
+                                        {table.aciklama && (
+                                          <p className="text-[10px] text-[#6B7260] mt-1 leading-tight">
+                                            {table.aciklama}
+                                          </p>
+                                        )}
+                                      </div>
+
+                                      {/* Eylem Butonları */}
+                                      <div className="pt-2 border-t border-[#D8D2C2]/50 flex items-center justify-between gap-1.5 text-[10px]">
+                                        {table.medasKn ? (
+                                          <a
+                                            href={`https://biruni.tuik.gov.tr/medas/?${table.medasKn}&locale=tr`}
+                                            target="_blank"
+                                            rel="noopener noreferrer"
+                                            className="font-bold text-[#5B6B32] hover:underline flex items-center gap-1"
+                                          >
+                                            <ExternalLink className="w-3 h-3" /> MEDAS Aç
+                                          </a>
+                                        ) : (
+                                          <a
+                                            href="https://veriportali.tuik.gov.tr"
+                                            target="_blank"
+                                            rel="noopener noreferrer"
+                                            className="font-bold text-[#6B7260] hover:text-[#1C2418] flex items-center gap-1"
+                                          >
+                                            <ExternalLink className="w-3 h-3" /> Portal
+                                          </a>
+                                        )}
+
+                                        {table.sdmxDataflow ? (
+                                          <button
+                                            onClick={() => {
+                                              setSelectedDataflowId(table.sdmxDataflow!);
+                                              setActiveTab('sdmx');
+                                            }}
+                                            className="font-bold text-[#C47A3A] bg-[#FBF1E6] hover:bg-[#F0D5BE] px-2 py-0.5 rounded border border-[#F0D5BE] flex items-center gap-1 transition-colors"
+                                            title="Bu Veri Akışını Canlı SDMX Servisinde Sorgula"
+                                          >
+                                            <Zap className="w-3 h-3" /> SDMX API
+                                          </button>
+                                        ) : (
+                                          <a
+                                            href="https://veriportali.tuik.gov.tr/tr/bulk-download"
+                                            target="_blank"
+                                            rel="noopener noreferrer"
+                                            className="text-[#6B7260] hover:text-[#C47A3A] flex items-center gap-0.5"
+                                            title="Toplu İndirme Sayfası"
+                                          >
+                                            <Download className="w-3 h-3" /> Toplu İndir
+                                          </a>
+                                        )}
+                                      </div>
+                                    </div>
+                                  ))}
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        )}
                       </div>
-                      {src.sdmxAvailable && (
-                        <span className="atlas-badge text-[10px]">SDMX Destekli</span>
+                    );
+                  })}
+                </div>
+              )}
+
+              {/* 2. GÖRÜNÜM: UTOBÜS 2021 RESMÎ SINIFLAMA GEZGİNİ (1.382 MADDE & ÖLÇÜ BİRİMLERİ) */}
+              {sourcesViewMode === 'utobus' && (
+                <div className="space-y-4">
+                  {/* Özet Metrik ve Metodoloji Kartı */}
+                  <div className="atlas-card p-5 rounded-2xl bg-gradient-to-r from-emerald-50/70 via-white to-white border border-emerald-200">
+                    <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 mb-4">
+                      <div>
+                        <div className="flex items-center gap-2">
+                          <span className="w-2.5 h-2.5 rounded-full bg-emerald-600" />
+                          <h4 className="text-sm font-bold text-[#1C2418]">
+                            Ulusal Tarım, Ormancılık ve Balıkçılık Ürünleri Sınıflaması, 2021 (UTOBÜS 2021)
+                          </h4>
+                          <span className="text-[10px] font-bold bg-emerald-100 text-emerald-800 px-2 py-0.5 rounded-full border border-emerald-300">
+                            126 Sayfalık Resmî El Kitabı
+                          </span>
+                        </div>
+                        <p className="text-xs text-[#6B7260] mt-1 leading-relaxed">
+                          TÜİK tarafından yayımlanan resmî 10-haneli madde kodları (<code className="font-mono bg-white px-1 py-0.2 rounded border border-emerald-200 text-emerald-900">01.XX.XX.XX.XX</code>) ve 
+                          resmî ölçü birimleri (<strong className="text-emerald-900">Ton [3002]</strong>, <strong className="text-emerald-900">Baş [4135]</strong>, <strong className="text-emerald-900">Adet sayısı [2600]</strong>, <strong className="text-emerald-900">Türk Lirası [3000]</strong>, <strong className="text-emerald-900">Metreküp [2400]</strong>).
+                        </p>
+                      </div>
+
+                      <div className="flex items-center gap-2 text-xs">
+                        <span className="text-[11px] bg-white px-3 py-1.5 rounded-xl border border-emerald-200 text-emerald-900 font-bold">
+                          Katalog Boyutu: {utobusStats.totalItems} Madde
+                        </span>
+                      </div>
+                    </div>
+
+                    {/* Resmî Ölçü Birimleri Dağılım Kartları */}
+                    <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2.5">
+                      <button
+                        onClick={() => setUtobusUnitFilter(utobusUnitFilter === '3002' ? 'all' : '3002')}
+                        className={`p-2.5 rounded-xl border text-left transition-all ${
+                          utobusUnitFilter === '3002'
+                            ? 'bg-emerald-600 text-white border-emerald-700 shadow-xs'
+                            : 'bg-white hover:border-emerald-500 border-[#D8D2C2]'
+                        }`}
+                      >
+                        <div className="text-[10px] font-bold opacity-80">Ton (Kod: 3002)</div>
+                        <div className="text-lg font-black tracking-tight mt-0.5">{utobusStats.unitBreakdown['3002'] || 952}</div>
+                        <div className="text-[9px] truncate mt-0.5 opacity-75">Tahıl, meyve, süt, karkas</div>
+                      </button>
+
+                      <button
+                        onClick={() => setUtobusUnitFilter(utobusUnitFilter === '2600' ? 'all' : '2600')}
+                        className={`p-2.5 rounded-xl border text-left transition-all ${
+                          utobusUnitFilter === '2600'
+                            ? 'bg-emerald-600 text-white border-emerald-700 shadow-xs'
+                            : 'bg-white hover:border-emerald-500 border-[#D8D2C2]'
+                        }`}
+                      >
+                        <div className="text-[10px] font-bold opacity-80">Adet sayısı (Kod: 2600)</div>
+                        <div className="text-lg font-black tracking-tight mt-0.5">{utobusStats.unitBreakdown['2600'] || 264}</div>
+                        <div className="text-[9px] truncate mt-0.5 opacity-75">Yumurta, fide, çiçek, kümes</div>
+                      </button>
+
+                      <button
+                        onClick={() => setUtobusUnitFilter(utobusUnitFilter === '3000' ? 'all' : '3000')}
+                        className={`p-2.5 rounded-xl border text-left transition-all ${
+                          utobusUnitFilter === '3000'
+                            ? 'bg-emerald-600 text-white border-emerald-700 shadow-xs'
+                            : 'bg-white hover:border-emerald-500 border-[#D8D2C2]'
+                        }`}
+                      >
+                        <div className="text-[10px] font-bold opacity-80">Türk Lirası (Kod: 3000)</div>
+                        <div className="text-lg font-black tracking-tight mt-0.5">{utobusStats.unitBreakdown['3000'] || 82}</div>
+                        <div className="text-[9px] truncate mt-0.5 opacity-75">Hasat, çapa, sürüm hizmeti</div>
+                      </button>
+
+                      <button
+                        onClick={() => setUtobusUnitFilter(utobusUnitFilter === '4135' ? 'all' : '4135')}
+                        className={`p-2.5 rounded-xl border text-left transition-all ${
+                          utobusUnitFilter === '4135'
+                            ? 'bg-emerald-600 text-white border-emerald-700 shadow-xs'
+                            : 'bg-white hover:border-emerald-500 border-[#D8D2C2]'
+                        }`}
+                      >
+                        <div className="text-[10px] font-bold opacity-80">Baş (Kod: 4135)</div>
+                        <div className="text-lg font-black tracking-tight mt-0.5">{utobusStats.unitBreakdown['4135'] || 48}</div>
+                        <div className="text-[9px] truncate mt-0.5 opacity-75">Canlı tosun, düve, kuzu</div>
+                      </button>
+
+                      <button
+                        onClick={() => setUtobusUnitFilter(utobusUnitFilter === '2400' ? 'all' : '2400')}
+                        className={`p-2.5 rounded-xl border text-left transition-all ${
+                          utobusUnitFilter === '2400'
+                            ? 'bg-emerald-600 text-white border-emerald-700 shadow-xs'
+                            : 'bg-white hover:border-emerald-500 border-[#D8D2C2]'
+                        }`}
+                      >
+                        <div className="text-[10px] font-bold opacity-80">Metreküp (Kod: 2400)</div>
+                        <div className="text-lg font-black tracking-tight mt-0.5">{utobusStats.unitBreakdown['2400'] || 25}</div>
+                        <div className="text-[9px] truncate mt-0.5 opacity-75">Orman & endüstriyel odun</div>
+                      </button>
+
+                      <button
+                        onClick={() => setUtobusUnitFilter(utobusUnitFilter === '2000' ? 'all' : '2000')}
+                        className={`p-2.5 rounded-xl border text-left transition-all ${
+                          utobusUnitFilter === '2000'
+                            ? 'bg-emerald-600 text-white border-emerald-700 shadow-xs'
+                            : 'bg-white hover:border-emerald-500 border-[#D8D2C2]'
+                        }`}
+                      >
+                        <div className="text-[10px] font-bold opacity-80">Litre (Kod: 2000)</div>
+                        <div className="text-lg font-black tracking-tight mt-0.5">{utobusStats.unitBreakdown['2000'] || 6}</div>
+                        <div className="text-[9px] truncate mt-0.5 opacity-75">Sıvı ürünler & şıra</div>
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Arama ve Filtre Kontrolleri */}
+                  <div className="atlas-card p-4 rounded-xl flex flex-col md:flex-row items-center gap-3">
+                    <div className="relative flex-1 w-full">
+                      <Search className="w-4 h-4 text-[#A6AC9A] absolute left-3 top-3 pointer-events-none" />
+                      <input
+                        type="text"
+                        value={utobusSearch}
+                        onChange={(e) => setUtobusSearch(e.target.value)}
+                        placeholder="UTOBÜS 2021 içinde ara... (Örn: '01.11.11', 'Durum buğdayı', 'Tosun', 'Hasat', 'Çapa', 'Zeytin', 'Karkas')..."
+                        className="w-full text-xs bg-white border border-[#D8D2C2] rounded-xl pl-9 pr-24 py-2.5 outline-none focus:border-emerald-600 shadow-2xs"
+                      />
+                      {utobusSearch && (
+                        <button
+                          onClick={() => setUtobusSearch('')}
+                          className="absolute right-3 top-2.5 text-xs text-[#6B7260] hover:text-[#1C2418] font-semibold"
+                        >
+                          Temizle
+                        </button>
                       )}
                     </div>
 
-                    <p className="text-xs text-[#6B7260] leading-relaxed">
-                      {src.description}
-                    </p>
-
-                    <div className="pt-2 border-t border-[#F0EDE4] grid grid-cols-2 gap-2 text-[11px] text-[#6B7260]">
-                      <div><strong>Sıklık:</strong> {src.frequency}</div>
-                      <div><strong>Kapsam:</strong> {src.coverage}</div>
-                    </div>
-
-                    <div className="p-2.5 rounded-lg bg-[#FBF9F4] border border-[#D8D2C2] text-[11px] text-[#6B7260] italic">
-                      <strong>Kısıt / Not:</strong> {src.notes}
-                    </div>
-
-                    <div className="pt-1">
-                      <a
-                        href={src.officialUrl}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="text-xs font-semibold text-[#5B6B32] hover:underline inline-flex items-center gap-1"
+                    {/* Bölüm Seçici */}
+                    <div className="w-full md:w-64">
+                      <select
+                        value={utobusChapterFilter}
+                        onChange={(e) => setUtobusChapterFilter(e.target.value)}
+                        className="w-full text-xs bg-white border border-[#D8D2C2] rounded-xl px-3 py-2.5 outline-none focus:border-emerald-600 font-medium"
                       >
-                        Resmî Portala Git <ChevronRight className="w-3.5 h-3.5" />
-                      </a>
+                        <option value="all">Tüm Bölümler (01, 02, 03, 10)</option>
+                        {UTOBUS_CHAPTERS.map(ch => (
+                          <option key={ch.kod} value={ch.kod}>
+                            {ch.kod}: {ch.ad}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+
+                    {/* Ölçü Birimi Sıfırlama */}
+                    {utobusUnitFilter !== 'all' && (
+                      <button
+                        onClick={() => setUtobusUnitFilter('all')}
+                        className="px-3 py-2 text-xs font-bold text-emerald-800 bg-emerald-100 hover:bg-emerald-200 rounded-xl transition-all shrink-0"
+                      >
+                        Filtreyi Kaldır ({UTOBUS_UNITS[utobusUnitFilter]?.ad || utobusUnitFilter})
+                      </button>
+                    )}
+                  </div>
+
+                  {/* UTOBÜS 2021 Tablosu */}
+                  <div className="atlas-card rounded-2xl overflow-hidden shadow-xs border border-[#D8D2C2]">
+                    <div className="p-3.5 bg-[#F0EDE4]/70 border-b border-[#D8D2C2] flex items-center justify-between text-xs">
+                      <div className="flex items-center gap-2">
+                        <Wheat className="w-4 h-4 text-emerald-700" />
+                        <span className="font-bold text-[#1C2418]">
+                          Eşleşen Resmî Maddeler
+                        </span>
+                        <span className="bg-emerald-100 text-emerald-800 font-bold px-2 py-0.5 rounded-full text-[11px]">
+                          {filteredUtobusItems.length} Kalem Gösteriliyor
+                        </span>
+                      </div>
+                      <span className="text-[11px] text-[#6B7260] italic">
+                        Koda tıklayarak panoya kopyalayabilirsiniz
+                      </span>
+                    </div>
+
+                    <div className="overflow-x-auto max-h-[600px] overflow-y-auto">
+                      <table className="w-full text-xs text-left">
+                        <thead className="bg-[#F0EDE4] text-[#1C2418] uppercase tracking-wider font-bold border-b border-[#D8D2C2] sticky top-0 z-10 shadow-2xs">
+                          <tr>
+                            <th className="px-3.5 py-3">10 Haneli Resmî Kod</th>
+                            <th className="px-4 py-3">Madde Tanımı (TÜİK Resmî)</th>
+                            <th className="px-3 py-3">Ölçü Birimi</th>
+                            <th className="px-3 py-3">Birim Kodu</th>
+                            <th className="px-3 py-3 text-right">Eylem</th>
+                          </tr>
+                        </thead>
+                        <tbody className="divide-y divide-[#D8D2C2] bg-white">
+                          {filteredUtobusItems.length === 0 ? (
+                            <tr>
+                              <td colSpan={5} className="p-8 text-center text-xs text-[#6B7260]">
+                                Arama kriterlerine uygun UTOBÜS 2021 maddesi bulunamadı. Lütfen arama terimini değiştirin.
+                              </td>
+                            </tr>
+                          ) : (
+                            filteredUtobusItems.map((item) => {
+                              const isCopied = utobusCopiedCode === item.kod;
+                              return (
+                                <tr key={item.kod} className="hover:bg-emerald-50/40 transition-colors group">
+                                  {/* 10 Haneli Kod */}
+                                  <td className="px-3.5 py-2.5 whitespace-nowrap font-mono font-bold text-emerald-950">
+                                    <button
+                                      onClick={() => {
+                                        navigator.clipboard.writeText(item.kod);
+                                        setUtobusCopiedCode(item.kod);
+                                        setTimeout(() => setUtobusCopiedCode(null), 2000);
+                                      }}
+                                      className="inline-flex items-center gap-1.5 px-2 py-1 rounded bg-slate-100 hover:bg-emerald-100 border border-slate-300 hover:border-emerald-400 transition-colors group/btn"
+                                      title="Kodu Kopyala"
+                                    >
+                                      <span>{item.kod}</span>
+                                      {isCopied ? (
+                                        <Check className="w-3 h-3 text-emerald-600" />
+                                      ) : (
+                                        <Copy className="w-3 h-3 text-slate-400 group-hover/btn:text-emerald-700" />
+                                      )}
+                                    </button>
+                                  </td>
+
+                                  {/* Madde Tanımı */}
+                                  <td className="px-4 py-2.5 font-medium text-[#1C2418]">
+                                    <div className="leading-snug">{item.tanim}</div>
+                                  </td>
+
+                                  {/* Ölçü Birimi */}
+                                  <td className="px-3 py-2.5 whitespace-nowrap">
+                                    <span className={`inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold border ${
+                                      item.olcuBirimKodu === '3002'
+                                        ? 'bg-emerald-50 text-emerald-800 border-emerald-300'
+                                        : item.olcuBirimKodu === '4135'
+                                        ? 'bg-amber-50 text-amber-900 border-amber-300'
+                                        : item.olcuBirimKodu === '2600'
+                                        ? 'bg-sky-50 text-sky-800 border-sky-300'
+                                        : item.olcuBirimKodu === '3000'
+                                        ? 'bg-purple-50 text-purple-800 border-purple-300'
+                                        : item.olcuBirimKodu === '2400'
+                                        ? 'bg-amber-100/60 text-amber-900 border-amber-300'
+                                        : 'bg-slate-100 text-slate-800 border-slate-300'
+                                    }`}>
+                                      {item.olcuBirimi || 'Standart'}
+                                    </span>
+                                  </td>
+
+                                  {/* Birim Kodu */}
+                                  <td className="px-3 py-2.5 whitespace-nowrap font-mono text-[11px] text-[#6B7260]">
+                                    <span className="bg-slate-100 px-1.5 py-0.5 rounded border border-slate-200">
+                                      {item.olcuBirimKodu || '-'}
+                                    </span>
+                                  </td>
+
+                                  {/* Hızlı Eylem */}
+                                  <td className="px-3 py-2.5 whitespace-nowrap text-right">
+                                    <button
+                                      onClick={() => {
+                                        setActiveTab('query');
+                                      }}
+                                      className="px-2 py-1 text-[11px] font-semibold text-[#5B6B32] hover:text-[#3B461E] hover:underline"
+                                    >
+                                      Sorgula →
+                                    </button>
+                                  </td>
+                                </tr>
+                              );
+                            })
+                          )}
+                        </tbody>
+                      </table>
                     </div>
                   </div>
-                ))}
-              </div>
+                </div>
+              )}
+
+              {/* 3. GÖRÜNÜM: RESMÎ KAYNAK VE METADATA KARTLARI */}
+              {sourcesViewMode === 'catalog' && (
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {sourceCatalog.map((src) => (
+                    <div key={src.id} className="atlas-card p-5 rounded-xl space-y-3">
+                      <div className="flex items-start justify-between gap-2">
+                        <div>
+                          <span className="text-[10px] uppercase font-bold text-[#5B6B32] tracking-wider block">
+                            {src.institution}
+                          </span>
+                          <h4 className="font-bold text-sm text-[#1C2418]">{src.name}</h4>
+                        </div>
+                        {src.sdmxAvailable && (
+                          <span className="atlas-badge text-[10px]">SDMX Destekli</span>
+                        )}
+                      </div>
+
+                      <p className="text-xs text-[#6B7260] leading-relaxed">
+                        {src.description}
+                      </p>
+
+                      <div className="pt-2 border-t border-[#F0EDE4] grid grid-cols-2 gap-2 text-[11px] text-[#6B7260]">
+                        <div><strong>Sıklık:</strong> {src.frequency}</div>
+                        <div><strong>Kapsam:</strong> {src.coverage}</div>
+                      </div>
+
+                      <div className="p-2.5 rounded-lg bg-[#FBF9F4] border border-[#D8D2C2] text-[11px] text-[#6B7260] italic">
+                        <strong>Kısıt / Not:</strong> {src.notes}
+                      </div>
+
+                      <div className="pt-1 flex items-center justify-between">
+                        <a
+                          href={src.officialUrl}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-xs font-semibold text-[#5B6B32] hover:underline inline-flex items-center gap-1"
+                        >
+                          Resmî Portala Git <ChevronRight className="w-3.5 h-3.5" />
+                        </a>
+
+                        {src.officialUrl.includes('bulk-download') && (
+                          <span className="text-[10px] font-bold text-[#C47A3A] bg-[#FBF1E6] px-2 py-0.5 rounded border border-[#F0D5BE]">
+                            Toplu İndirme
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+
             </div>
           )}
 

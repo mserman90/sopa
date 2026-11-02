@@ -22,6 +22,9 @@ export const TUIK_SDMX_CONFIG = {
   baseRestUrl: 'https://nsiws.tuik.gov.tr/rest',
   agencyId: 'TR',
 
+  // Toplu Veri İndirme (Bulk Download) Servisi
+  bulkDownloadUrl: 'https://veriportali.tuik.gov.tr/tr/bulk-download',
+
   // Desteklenen Çıktı Formatları
   supportedFormats: {
     sdmxCsv: 'SDMX-CSV',

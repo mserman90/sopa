@@ -1,3 +1,5 @@
+import { getUtobusByCode, findBestUtobusMatch, type UtobusItem } from '../data/utobus2021Catalog';
+
 /**
  * TarımViz Akıllı Sorgulama, Çapraz Doğrulama ve Endeks Hesaplama Motoru (queryEngine.ts)
  * 
@@ -353,6 +355,14 @@ export interface MasterCatalogItem {
   // Madde Düzeyinde Resmî Sınıflamalar
   taorba2008_2: string; // TÜİK Ulusal Tarım, Ormancılık ve Balıkçılık Ürünleri Sınıflaması (10 Hane)
   cpa2008: string;      // CPA 2008 (Avrupa Topluluğu Faaliyete Göre Ürünler Sınıflaması - 6 Hane)
+  
+  // TÜİK Resmî UTOBÜS 2021 (TAORBA 2021) 10 Haneli Kod ve Ölçü Birimi
+  utobus2021?: {
+    kod: string;
+    tanim: string;
+    olcuBirimi: string;
+    olcuBirimKodu: string;
+  };
   
   anaGrup: string;
   altGrup: string;
@@ -1645,6 +1655,12 @@ export interface QueryResultItem {
   // Madde Düzeyinde Resmî Kodlar
   taorba2008_2: string; // TÜİK Madde Kodu (TAORBA-2008_2)
   cpa2008: string;      // CPA 2008 Kodu
+  utobus2021?: {
+    kod: string;
+    tanim: string;
+    olcuBirimi: string;
+    olcuBirimKodu: string;
+  };
 
   anaGrup: string;
   altGrup: string;
@@ -1771,8 +1787,12 @@ export function executeAgriQuery(params: {
       }
     }
 
+    // UTOBÜS 2021 Resmî Kod ve Ölçü Birimi Eşleştirmesi
+    const utobusItem = item.utobus2021 || getUtobusByCode(item.taorba2008_2) || findBestUtobusMatch(item.urunAdi);
+    const utobusSummary = utobusItem ? ` | UTOBÜS 2021: ${utobusItem.kod} (${utobusItem.olcuBirimi} [${utobusItem.olcuBirimKodu}])` : '';
+
     // Kaynakça oluşturma
-    const kaynakca = `${item.birincilKaynak} | TAORBA: ${item.taorba2008_2} | CPA: ${item.cpa2008} | EMB: ${item.tobbBorsaKodu || 'TOBB Borsa Bülteni'} | HKS | AB 2020: ${item.abElKitabi2020.altGrupKod}`;
+    const kaynakca = `${item.birincilKaynak} | TAORBA: ${item.taorba2008_2} | CPA: ${item.cpa2008}${utobusSummary} | EMB: ${item.tobbBorsaKodu || 'TOBB Borsa Bülteni'} | HKS | AB 2020: ${item.abElKitabi2020.altGrupKod}`;
 
     return {
       id: `query-${il}-${item.id}-${yil}-${ay}`,
@@ -1785,6 +1805,7 @@ export function executeAgriQuery(params: {
       abElKitabi2020: item.abElKitabi2020,
       taorba2008_2: item.taorba2008_2,
       cpa2008: item.cpa2008,
+      utobus2021: utobusItem,
       anaGrup: item.anaGrup,
       altGrup: item.altGrup,
       urunAdi: item.urunAdi,

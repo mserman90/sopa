@@ -245,4 +245,29 @@ describe('TarımViz Akıllı Sorgulama ve Endeks Hesaplama Motoru Doğrulaması'
     expect(traktorItem?.tuikVeriKaynagi?.kurumVeDokuman).toContain('Traktör ve Makine Satışı Yapan Bayiler');
   });
 
+  it('12. Sorgulanan ürünler UTOBÜS 2021 (TAORBA 2021) 10-haneli kodu ve resmî ölçü birimiyle eşleşmelidir', () => {
+    const results = executeAgriQuery({ il: 'Konya', tur: 'cikti', yil: 2026, ay: 10 });
+    
+    // Ekmeklik Buğday
+    const bugday = results.find(r => r.urunAdi.includes('Ekmeklik Buğday'));
+    expect(bugday?.utobus2021).toBeDefined();
+    expect(bugday?.utobus2021?.kod).toBe('01.11.12.00.00');
+    expect(bugday?.utobus2021?.olcuBirimi).toBe('Ton');
+    expect(bugday?.utobus2021?.olcuBirimKodu).toBe('3002');
+    expect(bugday?.kaynakca).toContain('UTOBÜS 2021: 01.11.12.00.00');
+
+    // Makarnalık Buğday
+    const makarnalik = results.find(r => r.urunAdi.includes('Makarnalık'));
+    expect(makarnalik?.utobus2021).toBeDefined();
+    expect(makarnalik?.utobus2021?.kod).toBe('01.11.11.00.00');
+    expect(makarnalik?.utobus2021?.olcuBirimKodu).toBe('3002');
+
+    // Hayvansal Çıktı: Çiğ Süt
+    const hayvansalResults = executeAgriQuery({ il: 'İzmir', tur: 'cikti', yil: 2026, ay: 10 });
+    const sut = hayvansalResults.find(r => r.urunAdi.includes('Süt'));
+    expect(sut?.utobus2021).toBeDefined();
+    expect(sut?.utobus2021?.olcuBirimi).toBe('Ton');
+    expect(sut?.utobus2021?.olcuBirimKodu).toBe('3002');
+  });
+
 });

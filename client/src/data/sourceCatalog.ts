@@ -45,6 +45,17 @@ export const sourceCatalog: SourceMetadata[] = [
     notes: 'Girdi tarafında gübre (20.15), motorin (19.20), yem (10.91); Çıktı tarafında buğday (01.11), süt (01.41) vb. kodlanır.'
   },
   {
+    id: 'tuik-bulk-download',
+    name: 'TÜİK Toplu Veri Seti İndirme (Bulk Download)',
+    institution: 'Türkiye İstatistik Kurumu (TÜİK) Veri Portalı',
+    description: 'TÜİK SDMX altyapısı üzerinden tüm tarımsal göstergeleri, Tarım-GFE, Tarım-ÜFE, Bitkisel ve Hayvansal üretim veri setlerini CSV, XML ve JSON formatlarında tek seferde topluca indirme imkânı sunan resmî servis.',
+    frequency: 'Periyodik / Veri Seti Güncellemeleriyle Eşzamanlı',
+    coverage: 'Türkiye Geneli ve 81 İl Arşivleri (Tam Veri Setleri)',
+    officialUrl: 'https://veriportali.tuik.gov.tr/tr/bulk-download',
+    sdmxAvailable: true,
+    notes: 'Büyük hacimli zaman serileri için REST API sınırlarına takılmadan tam veri setini tek seferde CSV veya JSON olarak indirmek için en hızlı yöntemdir.'
+  },
+  {
     id: 'tuik-denge-104',
     name: 'Bitkisel Ürün Denge Tabloları (TÜİK MEDAS kn=104)',
     institution: 'Türkiye İstatistik Kurumu (TÜİK)',
@@ -164,5 +175,16 @@ export const sourceCatalog: SourceMetadata[] = [
     officialUrl: 'https://data.tuik.gov.tr',
     sdmxAvailable: false,
     notes: 'Tarımsal yatırıma katkı sağlayan sermaye malları (traktör, mibzer, pulluk, römork vb.) için modern veri kazıma teknikleri uygulanır.'
+  },
+  {
+    id: 'utobus-2021-siniflamasi',
+    name: 'Ulusal Tarım, Ormancılık ve Balıkçılık Ürünleri Sınıflaması, 2021 (UTOBÜS 2021 / TAORBA 2021)',
+    institution: 'Türkiye İstatistik Kurumu (TÜİK) — İstatistiki Sınıflamalar ve Standartlar',
+    description: 'TÜİK tarafından yayımlanan 126 sayfalık resmî ürün sınıflaması el kitabı. 1.382 adet 10-haneli madde kodu (01.XX.XX.XX.XX), kapsam tanımları ve resmî ölçü birimi kodlarını (3002: Ton, 4135: Baş, 2600: Adet sayısı, 3000: Türk Lirası, 2400: Metreküp, 2000: Litre) içerir.',
+    frequency: 'Resmî Referans Sınıflama (2021 Güncellemesi)',
+    coverage: 'Ulusal ve Uluslararası Uyumlu (CPA 2008 & Eurostat)',
+    officialUrl: 'https://veriportali.tuik.gov.tr/tr/bulk-download',
+    sdmxAvailable: true,
+    notes: 'TarımViz sorgu motorundaki tüm ürünler, UTOBÜS 2021 resmî 10-haneli kodları ve ölçü birimi standartlarıyla (Ton, Baş, Adet, TL) birebir eşleştirilmiştir.'
   }
 ];
