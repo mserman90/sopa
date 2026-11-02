@@ -3,7 +3,8 @@ import {
   calculateRevenue,
   evaluateGrossMargin,
   parseAndValidateCSV,
-  computeKPIs
+  computeKPIs,
+  getPreloadedMedasKn92Records
 } from './analysis.ts';
 
 describe('TarımViz - Analiz ve Doğrulama Kuralları', () => {
@@ -129,6 +130,28 @@ Adana,2025,bitkisel,Mısır,500,Ton,TÜİK BÜİ,İl,8,TL/Kg,,belirtilmemis,Yıl
       // Yalnızca Konya için marj hesaplanabilir: 10.000.000 - 6.000.000 = 4.000.000
       expect(kpis.toplamBrutMarjTL).toBe(4000000);
       expect(kpis.marjKapsananUrunSayisi).toBe(1);
+    });
+
+    it('getPreloadedMedasKn92Records geçerli TÜİK MEDAS kn=92 kayıtları üretmeli ve hesaplamaları doğrulamalıdır', () => {
+      const records = getPreloadedMedasKn92Records();
+      expect(records.length).toBe(10);
+      records.forEach(r => {
+        expect(r.kaynak).toContain('TÜİK MEDAS (kn=92');
+        expect(r.sektor).toBe('bitkisel');
+        expect(r.uretim_miktari).toBeGreaterThan(0);
+        expect(r.uretim_birimi).toBe('Ton');
+        expect(r.fiyat).toBeGreaterThan(0);
+        expect(r.fiyat_birimi).toBe('TL/Kg');
+        expect(r.marj_hesaplanabilir).toBe(true);
+        expect(r.taorba2008_2).toBeDefined();
+        expect(r.cpa2008).toBeDefined();
+      });
+
+      const kpis = computeKPIs(records);
+      expect(kpis.toplamUretimAdet).toBe(10);
+      expect(kpis.toplamGelirTL).toBeGreaterThan(0);
+      expect(kpis.toplamMaliyetTL).toBeGreaterThan(0);
+      expect(kpis.toplamBrutMarjTL).toBeGreaterThan(0);
     });
   });
 

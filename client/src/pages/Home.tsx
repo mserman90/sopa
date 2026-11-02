@@ -13,7 +13,8 @@ import {
 } from 'lucide-react';
 import { 
   TarimRecord, SektorType, parseAndValidateCSV, 
-  computeKPIs, generateCSVTemplate, exportRecordsToCSV 
+  computeKPIs, generateCSVTemplate, exportRecordsToCSV,
+  getPreloadedMedasKn92Records
 } from '../lib/analysis.ts';
 import { sourceCatalog } from '../data/sourceCatalog.ts';
 import { TUIK_TARIM_TAXONOMY, searchTuikTarimTaxonomy } from '../data/tuikTarimTaxonomy.ts';
@@ -410,6 +411,12 @@ export const Home: React.FC = () => {
     }
   };
 
+  const handleLoadMedas92SampleData = () => {
+    const medasRecords = getPreloadedMedasKn92Records();
+    saveRecords(medasRecords);
+    setActiveTab('overview');
+  };
+
   const handleDownloadTemplate = () => {
     const template = generateCSVTemplate();
     const blob = new Blob([template], { type: 'text/csv;charset=utf-8;' });
@@ -647,6 +654,15 @@ export const Home: React.FC = () => {
               >
                 <ExternalLink className="w-3.5 h-3.5 text-[#5B6B32]" /> TÜİK BÜİ (kn=92)
               </a>
+
+              <button
+                onClick={handleLoadMedas92SampleData}
+                className="px-3 py-1.5 text-xs font-semibold text-[#5B6B32] bg-[#EFF2E6] hover:bg-[#E3E8D3] border border-[#BDC8A3] rounded-lg transition-colors flex items-center gap-1.5 shadow-2xs"
+                title="TÜİK MEDAS (kn=92 BÜİ) 10 İl Rekolte ve Üretim Verilerini Analiz Tablosuna Yükle"
+              >
+                <Sprout className="w-3.5 h-3.5 text-[#5B6B32]" />
+                <span>BÜİ (kn=92) Yükle</span>
+              </button>
 
               <button
                 onClick={() => setActiveTab('sdmx')}
@@ -1256,14 +1272,22 @@ export const Home: React.FC = () => {
                   <AlertCircle className="w-12 h-12 text-[#C47A3A] mx-auto" />
                   <h3 className="text-lg font-bold text-[#1C2418]">Analiz Tablosunda Veri Bulunmuyor</h3>
                   <p className="text-xs text-[#6B7260] max-w-md mx-auto">
-                    "Akıllı Sorgulama" sekmesinden il bazlı verileri çekip <strong>"+ Analize Ekle"</strong> butonuna basabilir veya kendi hazırladığınız CSV dosyasını içe aktarabilirsiniz.
+                    "Akıllı Sorgulama" sekmesinden il bazlı verileri çekebilir, doğrudan <strong>TÜİK MEDAS (kn=92 BÜİ)</strong> resmî rekolte verilerini tek tıkla yükleyebilir veya kendi hazırladığınız CSV dosyasını içe aktarabilirsiniz.
                   </p>
-                  <button
-                    onClick={() => setActiveTab('query')}
-                    className="px-4 py-2 text-xs font-bold text-white bg-[#5B6B32] rounded-lg shadow-sm"
-                  >
-                    Akıllı Sorgulama Sekmesine Git
-                  </button>
+                  <div className="flex items-center justify-center gap-3 flex-wrap">
+                    <button
+                      onClick={handleLoadMedas92SampleData}
+                      className="px-4 py-2 text-xs font-bold text-white bg-[#5B6B32] hover:bg-[#4E5C2A] rounded-lg shadow-sm flex items-center gap-2"
+                    >
+                      <Sprout className="w-4 h-4" /> TÜİK MEDAS (kn=92) Verilerini Yükle
+                    </button>
+                    <button
+                      onClick={() => setActiveTab('query')}
+                      className="px-4 py-2 text-xs font-bold text-[#1C2418] bg-[#F0EDE4] hover:bg-[#E3DFD5] border border-[#D8D2C2] rounded-lg shadow-2xs"
+                    >
+                      Akıllı Sorgulama Sekmesine Git
+                    </button>
+                  </div>
                 </div>
               ) : (
                 <>
@@ -1407,7 +1431,20 @@ export const Home: React.FC = () => {
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-[#D8D2C2] bg-white">
-                    {filteredRecords.map((r) => (
+                    {filteredRecords.length === 0 ? (
+                      <tr>
+                        <td colSpan={10} className="p-8 text-center text-xs text-[#6B7260]">
+                          <p className="mb-3">Seçilen filtrelere uygun kayıt bulunamadı veya analiz tablonuz henüz boş.</p>
+                          <button
+                            onClick={handleLoadMedas92SampleData}
+                            className="px-4 py-2 text-xs font-bold text-white bg-[#5B6B32] hover:bg-[#4E5C2A] rounded-lg shadow-sm inline-flex items-center gap-1.5"
+                          >
+                            <Sprout className="w-3.5 h-3.5" /> TÜİK MEDAS (kn=92 BÜİ) Resmî Veri Setini Yükle
+                          </button>
+                        </td>
+                      </tr>
+                    ) : (
+                      filteredRecords.map((r) => (
                       <tr key={r.id} className="hover:bg-[#FBF9F4] transition-colors">
                         <td className="px-4 py-3 font-bold text-[#1C2418]">{r.il}</td>
                         <td className="px-3 py-3 tabular-numbers text-[#6B7260]">{r.yil}</td>
@@ -1448,7 +1485,7 @@ export const Home: React.FC = () => {
                           {r.kaynak}
                         </td>
                       </tr>
-                    ))}
+                    )))}
                   </tbody>
                 </table>
               </div>
